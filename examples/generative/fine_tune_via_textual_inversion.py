@@ -2,8 +2,10 @@
 Title: Teach StableDiffusion new concepts via Textual Inversion
 Authors: Ian Stenbit, [lukewood](https://lukewood.xyz)
 Date created: 2022/12/09
-Last modified: 2022/12/09
-Description: Learning new visual concepts with KerasCV's StableDiffusion implementation.
+Last modified: 2026/03/31
+Description: Learning new visual concepts with KerasHub's Stable Diffusion 3 implementation.
+Accelerator: GPU
+Converted to Keras 3 by: [Harshith K](https://github.com/kharshith-k/)
 """
 
 """
@@ -28,33 +30,74 @@ example of this process where the authors teach the model new concepts, calling 
 Conceptually, textual inversion works by learning a token embedding for a new text
 token, keeping the remaining components of StableDiffusion frozen.
 
-This guide shows you how to fine-tune the StableDiffusion model shipped in KerasCV
-using the Textual-Inversion algorithm.  By the end of the guide, you will be able to
-write the "Gandalf the Gray as a &lt;my-funny-cat-token&gt;".
+This guide shows you how to fine-tune Stable Diffusion 3 using KerasHub
+using a Textual-Inversion-inspired approach. By the end of the guide, you will be able to
+generate "Gandalf the Gray as a &lt;my-funny-cat-token&gt;".
 
 ![https://i.imgur.com/rcb1Yfx.png](https://i.imgur.com/rcb1Yfx.png)
 
+### Adapting Textual Inversion for Stable Diffusion 3
+
+**Important Note on Implementation:**
+The original Textual Inversion algorithm trains only new token embeddings while keeping
+the entire diffusion model frozen. However, Stable Diffusion 3's architecture presents
+some challenges for this classical approach:
+
+1. **Multi-encoder architecture:** SD3 uses three text encoders (CLIP-L, CLIP-G, and T5-XXL)
+   with complex preprocessing pipelines that are tightly coupled to their pretrained vocabularies.
+
+2. **Limited vocabulary extension:** KerasHub's SD3 implementation doesn't expose a simple
+   API to extend the tokenizer vocabulary and add custom embeddings like the original
+   KerasCV Stable Diffusion did.
+
+3. **Frozen preprocessing:** The text encoding pipeline is established at model creation
+   and isn't easily modifiable for custom tokens.
+
+Therefore, this tutorial adapts the Textual Inversion concept for SD3 by:
+- Pre-computing text embeddings for prompts containing our placeholder token using SD3's
+  existing text encoders
+- Fine-tuning the diffusion model (transformer) to associate these embeddings with our
+  visual concept
+- Keeping the text encoders and VAE frozen
+
+This approach is conceptually similar to **DreamBooth** but maintains the spirit of
+Textual Inversion: teaching the model a new visual concept through a textual placeholder.
+The end result is the same — you get a personalized model that understands your custom token!
 
 First, let's import the packages we need, and create a
-StableDiffusion instance so we can use some of its subcomponents for fine-tuning.
+Stable Diffusion 3 instance so we can use some of its subcomponents for fine-tuning.
 """
 
 """shell
-pip install -q git+https://github.com/keras-team/keras-cv.git
-pip install -q tensorflow==2.11.0
+pip install -q keras keras-hub
 """
 
-import math
+import os
 
-import keras_cv
-import numpy as np
-import tensorflow as tf
-from keras_cv import layers as cv_layers
-from keras_cv.models.stable_diffusion import NoiseScheduler
-from tensorflow import keras
+import keras
+import keras_hub
 import matplotlib.pyplot as plt
+import numpy as np
+from keras import ops
 
-stable_diffusion = keras_cv.models.StableDiffusion()
+
+class StableDiffusionHubWrapper:
+    def __init__(self, preset="stable_diffusion_3_medium", image_shape=(512, 512, 3)):
+        self.model = keras_hub.models.StableDiffusion3TextToImage.from_preset(
+            preset, image_shape=image_shape, dtype="float32"
+        )
+        self.backbone = self.model.backbone
+        self.diffusion_model = self.backbone.diffuser
+        self.preprocessor = (
+            keras_hub.models.StableDiffusion3TextToImagePreprocessor.from_preset(preset)
+        )
+
+    def text_to_image(self, prompt, batch_size=1, num_steps=50, seed=None):
+        prompts = [prompt] * batch_size if isinstance(prompt, str) else prompt
+        return np.array(self.model.generate(prompts, num_steps=num_steps, seed=seed))
+
+
+stable_diffusion = StableDiffusionHubWrapper()
 
 """
 Next, let's define a visualization utility to show off the generated images:
@@ -64,7 +107,7 @@ Next, let's define a visualization utility to show off the generated images:
 def plot_images(images):
     plt.figure(figsize=(20, 20))
     for i in range(len(images)):
-        ax = plt.subplot(1, len(images), i + 1)
+        plt.subplot(1, len(images), i + 1)
         plt.imshow(images[i])
         plt.axis("off")
 
@@ -85,82 +128,110 @@ First, let's construct an image dataset of cat dolls:
 """
 
 
-def assemble_image_dataset(urls):
-    # Fetch all remote files
-    files = [tf.keras.utils.get_file(origin=url) for url in urls]
-
-    # Resize images
+def assemble_image_array(paths):
+    """
+    Load images from local file paths or remote URLs.
+    """
+    files = []
+    for i, path in enumerate(paths):
+        if path.startswith("http://") or path.startswith("https://"):
+            print(f"Downloading image {i+1}/{len(paths)}: {path}")
+            files.append(keras.utils.get_file(origin=path))
+        else:
+            print(f"Loading local image {i+1}/{len(paths)}: {path}")
+            if not os.path.exists(path):
+                raise FileNotFoundError(f"Image not found: {path}")
+            files.append(path)
     resize = keras.layers.Resizing(height=512, width=512, crop_to_aspect_ratio=True)
-    images = [keras.utils.load_img(img) for img in files]
-    images = [keras.utils.img_to_array(img) for img in images]
-    images = np.array([resize(img) for img in images])
-
-    # The StableDiffusion image encoder requires images to be normalized to the
-    # [-1, 1] pixel value range
-    images = images / 127.5 - 1
-
-    # Create the tf.data.Dataset
-    image_dataset = tf.data.Dataset.from_tensor_slices(images)
-
-    # Shuffle and introduce random noise
-    image_dataset = image_dataset.shuffle(50, reshuffle_each_iteration=True)
-    image_dataset = image_dataset.map(
-        cv_layers.RandomCropAndResize(
-            target_size=(512, 512),
-            crop_area_factor=(0.8, 1.0),
-            aspect_ratio_factor=(1.0, 1.0),
-        ),
-        num_parallel_calls=tf.data.AUTOTUNE,
-    )
-    image_dataset = image_dataset.map(
-        cv_layers.RandomFlip(mode="horizontal"),
-        num_parallel_calls=tf.data.AUTOTUNE,
-    )
-    return image_dataset
+    images = [
+        resize(keras.utils.img_to_array(keras.utils.load_img(img))) for img in files
+    ]
+    return np.array(images, dtype="float32") / 127.5 - 1.0
 
 
 """
-Next, we assemble a text dataset:
+Next, we pre-compute text features using the SD3 text encoders:
 """
 
-MAX_PROMPT_LENGTH = 77
 placeholder_token = "<my-funny-cat-token>"
 
 
-def pad_embedding(embedding):
-    return embedding + (
-        [stable_diffusion.tokenizer.end_of_text] * (MAX_PROMPT_LENGTH - len(embedding))
-    )
-
-
-stable_diffusion.tokenizer.add_tokens(placeholder_token)
-
-
-def assemble_text_dataset(prompts):
+def assemble_text_features(prompts):
     prompts = [prompt.format(placeholder_token) for prompt in prompts]
-    embeddings = [stable_diffusion.tokenizer.encode(prompt) for prompt in prompts]
-    embeddings = [np.array(pad_embedding(embedding)) for embedding in embeddings]
-    text_dataset = tf.data.Dataset.from_tensor_slices(embeddings)
-    text_dataset = text_dataset.shuffle(100, reshuffle_each_iteration=True)
-    return text_dataset
+    token_ids = stable_diffusion.preprocessor.generate_preprocess(prompts)
+    negative_token_ids = stable_diffusion.preprocessor.generate_preprocess(
+        [""] * len(prompts)
+    )
+    positive_embeddings, _, positive_pooled, _ = (
+        stable_diffusion.backbone.encode_text_step(token_ids, negative_token_ids)
+    )
+    return np.array(positive_embeddings), np.array(positive_pooled)
+
+
+augmenter = keras.Sequential(
+    [
+        keras.layers.RandomFlip(mode="horizontal"),
+    ]
+)
+
+
+class TextualInversionDataset(keras.utils.PyDataset):
+    def __init__(
+        self,
+        images,
+        embedded_texts,
+        pooled_embeddings,
+        batch_size=1,
+        repeats=5,
+        shuffle=True,
+        seed=1337,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.images = images
+        self.embedded_texts = embedded_texts
+        self.pooled_embeddings = pooled_embeddings
+        self.batch_size = batch_size
+        self.repeats = repeats
+        self.shuffle = shuffle
+        self.rng = np.random.default_rng(seed)
+        self.num_samples = len(embedded_texts) * repeats
+        self.on_epoch_end()
+
+    def __len__(self):
+        return int(np.ceil(self.num_samples / self.batch_size))
+
+    def on_epoch_end(self):
+        self.indices = np.arange(self.num_samples)
+        if self.shuffle:
+            self.rng.shuffle(self.indices)
+
+    def __getitem__(self, idx):
+        batch_indices = self.indices[
+            idx * self.batch_size : (idx + 1) * self.batch_size
+        ]
+        text_indices = batch_indices % len(self.embedded_texts)
+        image_indices = batch_indices % len(self.images)
+        batch_images = augmenter(self.images[image_indices], training=True)
+        return {
+            "images": batch_images,
+            "embedded_texts": self.embedded_texts[text_indices],
+            "pooled_embeddings": self.pooled_embeddings[text_indices],
+        }
 
 
 """
-Finally, we zip our datasets together to produce a text-image pair dataset.
+Finally, we wrap the preprocessed arrays in a `keras.utils.PyDataset` so the pipeline
+stays backend-agnostic and works with `model.fit()` directly.
 """
 
 
-def assemble_dataset(urls, prompts):
-    image_dataset = assemble_image_dataset(urls)
-    text_dataset = assemble_text_dataset(prompts)
-    # the image dataset is quite short, so we repeat it to match the length of the
-    # text prompt dataset
-    image_dataset = image_dataset.repeat()
-    # we use the text prompt dataset to determine the length of the dataset.  Due to
-    # the fact that there are relatively few prompts we repeat the dataset 5 times.
-    # we have found that this anecdotally improves results.
-    text_dataset = text_dataset.repeat(5)
-    return tf.data.Dataset.zip((image_dataset, text_dataset))
+def assemble_dataset(urls, prompts, batch_size=1, repeats=5):
+    images = assemble_image_array(urls)
+    embedded_texts, pooled_embeddings = assemble_text_features(prompts)
+    return TextualInversionDataset(
+        images, embedded_texts, pooled_embeddings, batch_size, repeats, shuffle=True
+    )
 
 
 """
@@ -171,11 +242,11 @@ Let's try this out with some sample images and prompts.
 
 train_ds = assemble_dataset(
     urls=[
-        "https://i.imgur.com/VIedH1X.jpg",
-        "https://i.imgur.com/eBw13hE.png",
-        "https://i.imgur.com/oJ3rSg7.png",
-        "https://i.imgur.com/5mCL6Df.jpg",
-        "https://i.imgur.com/4Q6WWyI.jpg",
+        "test_data/images/cat_doll_01.jpeg",
+        "test_data/images/cat_doll_02.png",
+        "test_data/images/cat_doll_03.png",
+        "test_data/images/cat_doll_04.jpeg",
+        "test_data/images/cat_doll_05.jpeg",
     ],
     prompts=[
         "a photo of a {}",
@@ -231,42 +302,41 @@ inaccurate prompts; such as "a dark photo of the {}"
 Keeping this in mind, we assemble our final training dataset below:
 """
 
-single_ds = assemble_dataset(
-    urls=[
-        "https://i.imgur.com/VIedH1X.jpg",
-        "https://i.imgur.com/eBw13hE.png",
-        "https://i.imgur.com/oJ3rSg7.png",
-        "https://i.imgur.com/5mCL6Df.jpg",
-        "https://i.imgur.com/4Q6WWyI.jpg",
-    ],
-    prompts=[
-        "a photo of a {}",
-        "a rendering of a {}",
-        "a cropped photo of the {}",
-        "the photo of a {}",
-        "a photo of a clean {}",
-        "a photo of my {}",
-        "a photo of the cool {}",
-        "a close-up photo of a {}",
-        "a bright photo of the {}",
-        "a cropped photo of a {}",
-        "a photo of the {}",
-        "a good photo of the {}",
-        "a photo of one {}",
-        "a close-up photo of the {}",
-        "a rendition of the {}",
-        "a photo of the clean {}",
-        "a rendition of a {}",
-        "a photo of a nice {}",
-        "a good photo of a {}",
-        "a photo of the nice {}",
-        "a photo of the small {}",
-        "a photo of the weird {}",
-        "a photo of the large {}",
-        "a photo of a cool {}",
-        "a photo of a small {}",
-    ],
-)
+single_urls = [
+    "test_data/images/cat_doll_01.jpeg",
+    "test_data/images/cat_doll_02.png",
+    "test_data/images/cat_doll_03.png",
+    "test_data/images/cat_doll_04.jpeg",
+    "test_data/images/cat_doll_05.jpeg",
+]
+
+single_prompts = [
+    "a photo of a {}",
+    "a rendering of a {}",
+    "a cropped photo of the {}",
+    "the photo of a {}",
+    "a photo of a clean {}",
+    "a photo of my {}",
+    "a photo of the cool {}",
+    "a close-up photo of a {}",
+    "a bright photo of the {}",
+    "a cropped photo of a {}",
+    "a photo of the {}",
+    "a good photo of the {}",
+    "a photo of one {}",
+    "a close-up photo of the {}",
+    "a rendition of the {}",
+    "a photo of the clean {}",
+    "a rendition of a {}",
+    "a photo of a nice {}",
+    "a good photo of a {}",
+    "a photo of the nice {}",
+    "a photo of the small {}",
+    "a photo of the weird {}",
+    "a photo of the large {}",
+    "a photo of a cool {}",
+    "a photo of a small {}",
+]
 
 """
 ![https://i.imgur.com/gQCRjK6.png](https://i.imgur.com/gQCRjK6.png)
@@ -276,301 +346,190 @@ Looks great!
 Next, we assemble a dataset of groups of our GitHub avatars:
 """
 
-group_ds = assemble_dataset(
-    urls=[
-        "https://i.imgur.com/yVmZ2Qa.jpg",
-        "https://i.imgur.com/JbyFbZJ.jpg",
-        "https://i.imgur.com/CCubd3q.jpg",
-    ],
-    prompts=[
-        "a photo of a group of {}",
-        "a rendering of a group of {}",
-        "a cropped photo of the group of {}",
-        "the photo of a group of {}",
-        "a photo of a clean group of {}",
-        "a photo of my group of {}",
-        "a photo of a cool group of {}",
-        "a close-up photo of a group of {}",
-        "a bright photo of the group of {}",
-        "a cropped photo of a group of {}",
-        "a photo of the group of {}",
-        "a good photo of the group of {}",
-        "a photo of one group of {}",
-        "a close-up photo of the group of {}",
-        "a rendition of the group of {}",
-        "a photo of the clean group of {}",
-        "a rendition of a group of {}",
-        "a photo of a nice group of {}",
-        "a good photo of a group of {}",
-        "a photo of the nice group of {}",
-        "a photo of the small group of {}",
-        "a photo of the weird group of {}",
-        "a photo of the large group of {}",
-        "a photo of a cool group of {}",
-        "a photo of a small group of {}",
-    ],
-)
+group_urls = [
+    "test_data/images/cat_doll_group_01.jpeg",
+    "test_data/images/cat_doll_group_02.jpeg",
+    "test_data/images/cat_doll_group_03.jpeg",
+]
+
+group_prompts = [
+    "a photo of a group of {}",
+    "a rendering of a group of {}",
+    "a cropped photo of the group of {}",
+    "the photo of a group of {}",
+    "a photo of a clean group of {}",
+    "a photo of my group of {}",
+    "a photo of a cool group of {}",
+    "a close-up photo of a group of {}",
+    "a bright photo of the group of {}",
+    "a cropped photo of a group of {}",
+    "a photo of the group of {}",
+    "a good photo of the group of {}",
+    "a photo of one group of {}",
+    "a close-up photo of the group of {}",
+    "a rendition of the group of {}",
+    "a photo of the clean group of {}",
+    "a rendition of a group of {}",
+    "a photo of a nice group of {}",
+    "a good photo of a group of {}",
+    "a photo of the nice group of {}",
+    "a photo of the small group of {}",
+    "a photo of the weird group of {}",
+    "a photo of the large group of {}",
+    "a photo of a cool group of {}",
+    "a photo of a small group of {}",
+]
 
 """
 ![https://i.imgur.com/GY9Pf3D.png](https://i.imgur.com/GY9Pf3D.png)
 
-Finally, we concatenate the two datasets:
+Finally, we merge the two URL and prompt lists into a single dataset:
 """
 
-train_ds = single_ds.concatenate(group_ds)
-train_ds = train_ds.batch(1).shuffle(
-    train_ds.cardinality(), reshuffle_each_iteration=True
-)
+all_urls = single_urls + group_urls
+all_prompts = single_prompts + group_prompts
+train_ds = assemble_dataset(all_urls, all_prompts, batch_size=1, repeats=5)
 
 """
-## Adding a new token to the text encoder
+## Preparing the Stable Diffusion 3 model for fine-tuning
 
-Next, we create a new text encoder for the StableDiffusion model and add our new
-embedding for '<my-funny-cat-token>' into the model.
-"""
-tokenized_initializer = stable_diffusion.tokenizer.encode("cat")[1]
-new_weights = stable_diffusion.text_encoder.layers[2].token_embedding(
-    tf.constant(tokenized_initializer)
-)
+Now that we have our dataset ready, let's prepare the model for training.
 
-# Get len of .vocab instead of tokenizer
-new_vocab_size = len(stable_diffusion.tokenizer.vocab)
+### Architecture Overview
 
-# The embedding layer is the 2nd layer in the text encoder
-old_token_weights = stable_diffusion.text_encoder.layers[
-    2
-].token_embedding.get_weights()
-old_position_weights = stable_diffusion.text_encoder.layers[
-    2
-].position_embedding.get_weights()
+With SD3 and KerasHub, our training strategy differs from classical Textual Inversion:
 
-old_token_weights = old_token_weights[0]
-new_weights = np.expand_dims(new_weights, axis=0)
-new_weights = np.concatenate([old_token_weights, new_weights], axis=0)
+**Classical Textual Inversion (original SD):**
+- Add new token to vocabulary
+- Create trainable embedding for that token
+- Freeze everything else (diffusion model, VAE, rest of text encoder)
+- Train only the new token embedding
 
+**Our SD3 Approach:**
+- Pre-compute text features with SD3's multi-encoder system (in `assemble_text_features`)
+- Freeze text encoders and VAE
+- Fine-tune the diffusion model (transformer denoiser) to associate the pre-computed
+  text features with visual concepts from training images
 
-"""
-Let's construct a new TextEncoder and prepare it.
+This adapted approach is necessary because SD3's architecture doesn't allow easy vocabulary
+extension, but it achieves the same goal: teaching the model to understand your custom
+placeholder token and generate images based on it.
 """
 
-# Have to set download_weights False so we can init (otherwise tries to load weights)
-new_encoder = keras_cv.models.stable_diffusion.TextEncoder(
-    keras_cv.models.stable_diffusion.stable_diffusion.MAX_PROMPT_LENGTH,
-    vocab_size=new_vocab_size,
-    download_weights=False,
-)
-for index, layer in enumerate(stable_diffusion.text_encoder.layers):
-    # Layer 2 is the embedding layer, so we omit it from our weight-copying
-    if index == 2:
-        continue
-    new_encoder.layers[index].set_weights(layer.get_weights())
+print("Backbone:", stable_diffusion.backbone.__class__.__name__)
+print("Diffuser:", stable_diffusion.diffusion_model.__class__.__name__)
+print("Preprocessor:", stable_diffusion.preprocessor.__class__.__name__)
 
+"""
+Now we freeze the SD3 backbone (which contains the VAE and text encoders) and mark
+only the diffusion model as trainable:
+"""
 
-new_encoder.layers[2].token_embedding.set_weights([new_weights])
-new_encoder.layers[2].position_embedding.set_weights(old_position_weights)
-
-stable_diffusion._text_encoder = new_encoder
-stable_diffusion._text_encoder.compile(jit_compile=True)
+stable_diffusion.backbone.trainable = False
+stable_diffusion.diffusion_model.trainable = True
 
 """
 ## Training
 
 Now we can move on to the exciting part: training!
 
-In TextualInversion, the only piece of the model that is trained is the embedding vector.
-Let's freeze the rest of the model.
+In this SD3-based Textual Inversion approach, we fine-tune the diffusion model
+(the transformer denoiser) while keeping the VAE and text encoders frozen.
+The placeholder token `<my-funny-cat-token>` is embedded by the SD3 text encoders
+during dataset assembly; the diffusion model learns to associate those embeddings
+with the visual concept from the training images.
+
+**Note:** This approach is adapted for Stable Diffusion 3's architecture. Unlike
+classical Textual Inversion (which trains only token embeddings while freezing the
+diffusion model), we fine-tune the diffusion model itself.
 """
 
-
-stable_diffusion.diffusion_model.trainable = False
-stable_diffusion.decoder.trainable = False
-stable_diffusion.text_encoder.trainable = True
-
-stable_diffusion.text_encoder.layers[2].trainable = True
-
-
-def traverse_layers(layer):
-    if hasattr(layer, "layers"):
-        for layer in layer.layers:
-            yield layer
-    if hasattr(layer, "token_embedding"):
-        yield layer.token_embedding
-    if hasattr(layer, "position_embedding"):
-        yield layer.position_embedding
-
-
-for layer in traverse_layers(stable_diffusion.text_encoder):
-    if isinstance(layer, keras.layers.Embedding) or "clip_embedding" in layer.name:
-        layer.trainable = True
-    else:
-        layer.trainable = False
-
-new_encoder.layers[2].position_embedding.trainable = False
+stable_diffusion.backbone.vae.trainable = False
 
 """
 Let's confirm the proper weights are set to trainable.
 """
 
-all_models = [
-    stable_diffusion.text_encoder,
-    stable_diffusion.diffusion_model,
-    stable_diffusion.decoder,
-]
-print([[w.shape for w in model.trainable_weights] for model in all_models])
-
-"""
-## Training the new embedding
-
-In order to train the embedding, we need a couple of utilities.
-We import a NoiseScheduler from KerasCV, and define the following utilities below:
-
-- `sample_from_encoder_outputs` is a wrapper around the base StableDiffusion image
-encoder which samples from the statistical distribution produced by the image
-encoder, rather than taking just the mean (like many other SD applications)
-- `get_timestep_embedding` produces an embedding for a specified timestep for the
-diffusion model
-- `get_position_ids` produces a tensor of position IDs for the text encoder (which is just a
-series from `[1, MAX_PROMPT_LENGTH]`)
-"""
-
-
-# Remove the top layer from the encoder, which cuts off the variance and only returns
-# the mean
-training_image_encoder = keras.Model(
-    stable_diffusion.image_encoder.input,
-    stable_diffusion.image_encoder.layers[-2].output,
+print([w.shape for w in stable_diffusion.diffusion_model.trainable_weights][:10])
+print(
+    "Total trainable weights:", len(stable_diffusion.diffusion_model.trainable_weights)
 )
 
+"""
+## Training the diffusion model with SD3 conditioning
 
-def sample_from_encoder_outputs(outputs):
-    mean, logvar = tf.split(outputs, 2, axis=-1)
-    logvar = tf.clip_by_value(logvar, -30.0, 20.0)
-    std = tf.exp(0.5 * logvar)
-    sample = tf.random.normal(tf.shape(mean))
-    return mean + std * sample
+In order to train with KerasHub Stable Diffusion 3, we reuse precomputed text
+conditioning from the SD3 preprocessor/backbone and optimize only the diffuser.
+
+We use a backend-agnostic `compute_loss` with `keras.ops` and `keras.random`,
+following the same migration pattern as the DreamBooth notebook.
+"""
+
+noise_seed = keras.random.SeedGenerator(1337)
 
 
-def get_timestep_embedding(timestep, dim=320, max_period=10000):
-    half = dim // 2
-    freqs = tf.math.exp(
-        -math.log(max_period) * tf.range(0, half, dtype=tf.float32) / half
+def sample_noisy_latents(images):
+    latents = stable_diffusion.backbone.encode_image_step(images)
+    noise = keras.random.normal(shape=ops.shape(latents), seed=noise_seed)
+    batch_size = ops.shape(latents)[0]
+    timesteps = keras.random.uniform(
+        shape=(batch_size,),
+        minval=0.0,
+        maxval=1.0,
+        dtype="float32",
+        seed=noise_seed,
     )
-    args = tf.convert_to_tensor([timestep], dtype=tf.float32) * freqs
-    embedding = tf.concat([tf.math.cos(args), tf.math.sin(args)], 0)
-    return embedding
-
-
-def get_position_ids():
-    return tf.convert_to_tensor([list(range(MAX_PROMPT_LENGTH))], dtype=tf.int32)
+    t = ops.reshape(timesteps, (-1, 1, 1, 1))
+    noisy_latents = (1.0 - t) * latents + t * noise
+    target = noise - latents
+    return noisy_latents, target, timesteps
 
 
 """
 Next, we implement a `StableDiffusionFineTuner`, which is a subclass of `keras.Model`
-that overrides `train_step` to train the token embeddings of our text encoder.
-This is the core of the Textual Inversion algorithm.
+that overrides `compute_loss` (instead of `train_step`) for backend-agnostic training.
 
-Abstractly speaking, the train step takes a sample from the output of the frozen SD
-image encoder's latent distribution for a training image, adds noise to that sample, and
-then passes that noisy sample to the frozen diffusion model.
-The hidden state of the diffusion model is the output of the text encoder for the prompt
-corresponding to the image.
-
-Our final goal state is that the diffusion model is able to separate the noise from the
-sample using the text encoding as hidden state, so our loss is the mean-squared error of
-the noise and the output of the diffusion model (which has, ideally, removed the image
-latents from the noise).
-
-We compute gradients for only the token embeddings of the text encoder, and in the
-train step we zero-out the gradients for all tokens other than the token that we're
-learning.
-
-See in-line code comments for more details about the train step.
+The loss function follows the SD3 Flow Matching-style objective used in the DreamBooth
+migration:
+- encode images to latents
+- sample noise and continuous timesteps
+- mix latents/noise according to timestep
+- predict the target velocity with the diffuser
+- optimize MSE between target and prediction
 """
 
 
 class StableDiffusionFineTuner(keras.Model):
-    def __init__(self, stable_diffusion, noise_scheduler, **kwargs):
+    def __init__(self, stable_diffusion, **kwargs):
         super().__init__(**kwargs)
         self.stable_diffusion = stable_diffusion
-        self.noise_scheduler = noise_scheduler
+        self.diffusion_model = stable_diffusion.diffusion_model
 
-    def train_step(self, data):
-        images, embeddings = data
+    def call(self, inputs):
+        return inputs
 
-        with tf.GradientTape() as tape:
-            # Sample from the predicted distribution for the training image
-            latents = sample_from_encoder_outputs(training_image_encoder(images))
-            # The latents must be downsampled to match the scale of the latents used
-            # in the training of StableDiffusion.  This number is truly just a "magic"
-            # constant that they chose when training the model.
-            latents = latents * 0.18215
+    def compute_loss(self, x=None, y=None, y_pred=None, sample_weight=None):
+        _ = (y, y_pred, sample_weight)
+        images = x["images"]
+        embedded_texts = x["embedded_texts"]
+        pooled_embeddings = x["pooled_embeddings"]
 
-            # Produce random noise in the same shape as the latent sample
-            noise = tf.random.normal(tf.shape(latents))
-            batch_dim = tf.shape(latents)[0]
-
-            # Pick a random timestep for each sample in the batch
-            timesteps = tf.random.uniform(
-                (batch_dim,),
-                minval=0,
-                maxval=noise_scheduler.train_timesteps,
-                dtype=tf.int64,
-            )
-
-            # Add noise to the latents based on the timestep for each sample
-            noisy_latents = self.noise_scheduler.add_noise(latents, noise, timesteps)
-
-            # Encode the text in the training samples to use as hidden state in the
-            # diffusion model
-            encoder_hidden_state = self.stable_diffusion.text_encoder(
-                [embeddings, get_position_ids()]
-            )
-
-            # Compute timestep embeddings for the randomly-selected timesteps for each
-            # sample in the batch
-            timestep_embeddings = tf.map_fn(
-                fn=get_timestep_embedding,
-                elems=timesteps,
-                fn_output_signature=tf.float32,
-            )
-
-            # Call the diffusion model
-            noise_pred = self.stable_diffusion.diffusion_model(
-                [noisy_latents, timestep_embeddings, encoder_hidden_state]
-            )
-
-            # Compute the mean-squared error loss and reduce it.
-            loss = self.compiled_loss(noise_pred, noise)
-            loss = tf.reduce_mean(loss, axis=2)
-            loss = tf.reduce_mean(loss, axis=1)
-            loss = tf.reduce_mean(loss)
-
-        # Load the trainable weights and compute the gradients for them
-        trainable_weights = self.stable_diffusion.text_encoder.trainable_weights
-        grads = tape.gradient(loss, trainable_weights)
-
-        # Gradients are stored in indexed slices, so we have to find the index
-        # of the slice(s) which contain the placeholder token.
-        index_of_placeholder_token = tf.reshape(tf.where(grads[0].indices == 49408), ())
-        condition = grads[0].indices == 49408
-        condition = tf.expand_dims(condition, axis=-1)
-
-        # Override the gradients, zeroing out the gradients for all slices that
-        # aren't for the placeholder token, effectively freezing the weights for
-        # all other tokens.
-        grads[0] = tf.IndexedSlices(
-            values=tf.where(condition, grads[0].values, 0),
-            indices=grads[0].indices,
-            dense_shape=grads[0].dense_shape,
+        noisy_latents, target, timesteps = sample_noisy_latents(images)
+        model_pred = self.diffusion_model(
+            {
+                "latent": noisy_latents,
+                "context": embedded_texts,
+                "pooled_projection": pooled_embeddings,
+                "timestep": ops.reshape(timesteps, (-1, 1)),
+            },
+            training=True,
         )
-
-        self.optimizer.apply_gradients(zip(grads, trainable_weights))
-        return {"loss": loss}
+        return ops.mean(ops.square(target - model_pred))
 
 
 """
-Before we start training, let's take a look at what StableDiffusion produces for our
-token.
+Before we start training, let's take a look at what Stable Diffusion 3 produces for our
+placeholder token prompt. This gives us a baseline to compare against after fine-tuning.
 """
 
 generated = stable_diffusion.text_to_image(
@@ -579,34 +538,25 @@ generated = stable_diffusion.text_to_image(
 plot_images(generated)
 
 """
-As you can see, the model still thinks of our token as a cat, as this was the seed token
-we used to initialize our custom token.
-
-Now, to get started with training, we can just `compile()` our model like any other
-Keras model. Before doing so, we also instantiate a noise scheduler for training and
-configure our training parameters such as learning rate and optimizer.
+Now, to get started with training, we can `compile()` our model like any other
+Keras model and configure our training parameters such as learning rate and optimizer.
 """
 
-noise_scheduler = NoiseScheduler(
-    beta_start=0.00085,
-    beta_end=0.012,
-    beta_schedule="scaled_linear",
-    train_timesteps=1000,
-)
-trainer = StableDiffusionFineTuner(stable_diffusion, noise_scheduler, name="trainer")
+trainer = StableDiffusionFineTuner(stable_diffusion, name="trainer")
 EPOCHS = 50
 learning_rate = keras.optimizers.schedules.CosineDecay(
-    initial_learning_rate=1e-4, decay_steps=train_ds.cardinality() * EPOCHS
+    initial_learning_rate=1e-5, decay_steps=len(train_ds) * EPOCHS
 )
-optimizer = keras.optimizers.Adam(
-    weight_decay=0.004, learning_rate=learning_rate, epsilon=1e-8, global_clipnorm=10
+optimizer = keras.optimizers.AdamW(
+    learning_rate=learning_rate,
+    weight_decay=0.0,
+    beta_1=0.9,
+    beta_2=0.999,
+    epsilon=1e-8,
+    clipnorm=1.0,
 )
 
-trainer.compile(
-    optimizer=optimizer,
-    # We are performing reduction manually in our train step, so none is required here.
-    loss=keras.losses.MeanSquaredError(reduction="none"),
-)
+trainer.compile(optimizer=optimizer)
 
 """
 To monitor training, we can produce a `keras.callbacks.Callback` to produce a few images
@@ -629,14 +579,12 @@ class GenerateImages(keras.callbacks.Callback):
         self.frequency = frequency
         self.steps = steps
 
-    def on_epoch_end(self, epoch, logs):
+    def on_epoch_end(self, epoch, logs=None):
         if epoch % self.frequency == 0:
             images = self.stable_diffusion.text_to_image(
                 self.prompt, batch_size=3, num_steps=self.steps, seed=self.seed
             )
-            plot_images(
-                images,
-            )
+            plot_images(images)
 
 
 cbs = [
@@ -657,11 +605,7 @@ cbs = [
 Now, all that is left to do is to call `model.fit()`!
 """
 
-trainer.fit(
-    train_ds,
-    epochs=EPOCHS,
-    callbacks=cbs,
-)
+trainer.fit(train_ds, epochs=EPOCHS, callbacks=cbs)
 
 """
 It's pretty fun to see how the model learns our new token over time. Play around with it
