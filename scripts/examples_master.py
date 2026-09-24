@@ -164,6 +164,13 @@ EXAMPLES_MASTER = {
                     "subcategory": "Image segmentation",
                     "keras_3": True,
                 },
+                {
+                    "path": "trans_unet_multi_organ_segmentation",
+                    "title": "2D Multi-Organ Segmentation with TransUNet",
+                    "subcategory": "Image segmentation",
+                    "highlight": True,
+                    "keras_3": True,
+                },
                 # Object Detection
                 {
                     "path": "retinanet",
