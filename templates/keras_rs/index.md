@@ -17,6 +17,12 @@ This library is an extension of the core Keras API; all high-level modules
 receive that same level of polish as core Keras. If you are familiar with Keras,
 congratulations! You already understand most of Keras Recommenders.
 
+<div style="text-align: center;">
+  <a href="http://www.youtube.com/watch?feature=player_embedded&v=uV3gymO9K98&list=PL9f9vdy2ar1IdH6O6kQGn4Ln-_oLH_Ra3" 
+    target="_blank"><img src="http://img.youtube.com/vi/uV3gymO9K98/hqdefault.jpg" 
+  alt="KerasRS Video" width="360" height="270" border="10" /></a>
+</div>
+
 ## Quick Links
 
 - [API documentation](/keras_rs/api)
