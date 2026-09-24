@@ -8,7 +8,13 @@
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_hub/hugging_face_keras_integration.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_hub/hugging_face_keras_integration.py)
 
+---
 
+## Video Guide
+
+[https://www.youtube.com/watch?v=OpSddL3Lv7I](https://www.youtube.com/watch?v=OpSddL3Lv7I&list=PL9f9vdy2ar1IdH6O6kQGn4Ln-_oLH_Ra3&index=2)
+
+[![How to use KerasHub with Hugging Face](http://img.youtube.com/vi/OpSddL3Lv7I/maxresdefault.jpg)](https://www.youtube.com/watch?v=OpSddL3Lv7I&list=PL9f9vdy2ar1IdH6O6kQGn4Ln-_oLH_Ra3&index=2)
 
 ---
 ## Introduction
