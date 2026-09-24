@@ -2,7 +2,7 @@
 Title: Next-Frame Video Prediction with Convolutional LSTMs
 Author: [Amogh Joshi](https://github.com/amogh7joshi)
 Date created: 2021/06/02
-Last modified: 2023/11/10
+Last modified: 2026/06/23
 Description: How to build and train a convolutional LSTM model for next-frame video prediction.
 Accelerator: GPU
 """
@@ -122,13 +122,18 @@ To build a Convolutional LSTM model, we will use the
 `ConvLSTM2D` layer, which will accept inputs of shape
 `(batch_size, num_frames, width, height, channels)`, and return
 a prediction movie of the same shape.
+
+We apply causal padding to the final 3D convolution so that it can only
+access past and current frames, not the future frame it is meant to predict.
+This prevents data leakage and keeps the output shape identical to the target
+sequence.
 """
 
 # Construct the input layer with no definite frame size.
 inp = layers.Input(shape=(None, *x_train.shape[2:]))
 
 # We will construct 3 `ConvLSTM2D` layers with batch normalization,
-# followed by a `Conv3D` layer for the spatiotemporal outputs.
+# followed by a causally-padded `Conv3D` layer for the spatiotemporal outputs.
 x = layers.ConvLSTM2D(
     filters=64,
     kernel_size=(5, 5),
@@ -152,8 +157,9 @@ x = layers.ConvLSTM2D(
     return_sequences=True,
     activation="relu",
 )(x)
+x = layers.ZeroPadding3D(padding=((2, 0), (1, 1), (1, 1)))(x)
 x = layers.Conv3D(
-    filters=1, kernel_size=(3, 3, 3), activation="sigmoid", padding="same"
+    filters=1, kernel_size=(3, 3, 3), activation="sigmoid", padding="valid"
 )(x)
 
 # Next, we will build the complete model and compile it.
