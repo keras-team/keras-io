@@ -38,7 +38,7 @@ The dataset contains 3601 training instances and another 1320 testing instances.
 Each timeseries corresponds to a measurement of engine noise captured by a motor sensor.
 For this task, the goal is to automatically detect the presence of a specific issue with
 the engine. The problem is a balanced binary classification task. The full description of
-this dataset can be found [here](http://www.j-wichard.de/publications/FordPaper.pdf).
+this dataset can be found [here](https://www.researchgate.net/publication/228506182_Classification_of_Ford_Motor_Data).
 
 ### Read the TSV data
 
