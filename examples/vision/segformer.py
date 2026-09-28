@@ -79,11 +79,11 @@ def load_image(datapoint):
     input_mask = tf.image.resize(
         datapoint["segmentation_mask"],
         (image_size, image_size),
-        method="bilinear",
+        method="nearest",
     )
 
     input_image, input_mask = normalize(input_image, input_mask)
-    return input_image, tf.squeeze(input_mask)
+    return input_image, tf.squeeze(tf.cast(input_mask, tf.int32))
 
 
 """

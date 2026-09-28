@@ -85,11 +85,11 @@ def load_image(datapoint):
     input_mask = tf.image.resize(
         datapoint["segmentation_mask"],
         (image_size, image_size),
-        method="bilinear",
+        method="nearest",
     )
 
     input_image, input_mask = normalize(input_image, input_mask)
-    return input_image, tf.squeeze(input_mask)
+    return input_image, tf.squeeze(tf.cast(input_mask, tf.int32))
 
 ```
 
@@ -127,7 +127,7 @@ print(train_ds.element_spec)
 
 <div class="k-default-codeblock">
 ```
-(TensorSpec(shape=(None, 224, 224, 3), dtype=tf.float32, name=None), TensorSpec(shape=(None, 224, 224), dtype=tf.float32, name=None))
+(TensorSpec(shape=(None, 224, 224, 3), dtype=tf.float32, name=None), TensorSpec(shape=(None, 224, 224), dtype=tf.int32, name=None))
 ```
 </div>
 
@@ -280,7 +280,7 @@ history = model.fit(
     
 <div class="k-default-codeblock">
 ```
-1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 102ms/step
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 186ms/step
 ```
 </div>
 
@@ -293,7 +293,7 @@ history = model.fit(
 ```
 Sample Prediction after epoch 5
 
-920/920 ━━━━━━━━━━━━━━━━━━━━ 291s 316ms/step - loss: 0.1921 - sparse_categorical_accuracy: 0.9172 - val_loss: 0.2170 - val_sparse_categorical_accuracy: 0.9146
+920/920 ━━━━━━━━━━━━━━━━━━━━ 963s 1s/step - loss: 0.1811 - sparse_categorical_accuracy: 0.9280 - val_loss: 0.2134 - val_sparse_categorical_accuracy: 0.9223
 ```
 </div>
 
@@ -310,7 +310,7 @@ show_predictions(test_ds, 5)
     
 <div class="k-default-codeblock">
 ```
-1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 87ms/step
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 136ms/step
 ```
 </div>
 
@@ -321,7 +321,7 @@ show_predictions(test_ds, 5)
     
 <div class="k-default-codeblock">
 ```
-1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 68ms/step
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 97ms/step
 ```
 </div>
 
@@ -332,7 +332,7 @@ show_predictions(test_ds, 5)
     
 <div class="k-default-codeblock">
 ```
-1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 71ms/step
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 104ms/step
 ```
 </div>
 
@@ -343,7 +343,7 @@ show_predictions(test_ds, 5)
     
 <div class="k-default-codeblock">
 ```
-1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 68ms/step
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 100ms/step
 ```
 </div>
 
@@ -354,7 +354,7 @@ show_predictions(test_ds, 5)
     
 <div class="k-default-codeblock">
 ```
-1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 67ms/step
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 343ms/step
 ```
 </div>
 
