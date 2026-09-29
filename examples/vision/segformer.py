@@ -68,14 +68,14 @@ std = tf.constant([0.229, 0.224, 0.225])
 
 
 def normalize(input_image, input_mask):
-    input_image = tf.image.convert_image_dtype(input_image, tf.float32)
     input_image = (input_image - mean) / tf.maximum(std, keras.backend.epsilon())
     input_mask -= 1
     return input_image, input_mask
 
 
 def load_image(datapoint):
-    input_image = tf.image.resize(datapoint["image"], (image_size, image_size))
+    input_image = tf.image.convert_image_dtype(datapoint["image"], tf.float32)
+    input_image = tf.image.resize(input_image, (image_size, image_size))
     input_mask = tf.image.resize(
         datapoint["segmentation_mask"],
         (image_size, image_size),
@@ -83,7 +83,7 @@ def load_image(datapoint):
     )
 
     input_image, input_mask = normalize(input_image, input_mask)
-    return input_image, tf.squeeze(tf.cast(input_mask, tf.int32))
+    return input_image, tf.squeeze(tf.cast(input_mask, tf.int32), axis=-1)
 
 
 """
@@ -97,9 +97,9 @@ batch_size = 4
 
 train_ds = (
     dataset["train"]
+    .map(load_image, num_parallel_calls=auto)
     .cache()
     .shuffle(batch_size * 10)
-    .map(load_image, num_parallel_calls=auto)
     .batch(batch_size)
     .prefetch(auto)
 )

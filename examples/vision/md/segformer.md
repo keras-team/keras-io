@@ -74,14 +74,14 @@ std = tf.constant([0.229, 0.224, 0.225])
 
 
 def normalize(input_image, input_mask):
-    input_image = tf.image.convert_image_dtype(input_image, tf.float32)
     input_image = (input_image - mean) / tf.maximum(std, keras.backend.epsilon())
     input_mask -= 1
     return input_image, input_mask
 
 
 def load_image(datapoint):
-    input_image = tf.image.resize(datapoint["image"], (image_size, image_size))
+    input_image = tf.image.convert_image_dtype(datapoint["image"], tf.float32)
+    input_image = tf.image.resize(input_image, (image_size, image_size))
     input_mask = tf.image.resize(
         datapoint["segmentation_mask"],
         (image_size, image_size),
@@ -89,7 +89,7 @@ def load_image(datapoint):
     )
 
     input_image, input_mask = normalize(input_image, input_mask)
-    return input_image, tf.squeeze(tf.cast(input_mask, tf.int32))
+    return input_image, tf.squeeze(tf.cast(input_mask, tf.int32), axis=-1)
 
 ```
 
@@ -104,9 +104,9 @@ batch_size = 4
 
 train_ds = (
     dataset["train"]
+    .map(load_image, num_parallel_calls=auto)
     .cache()
     .shuffle(batch_size * 10)
-    .map(load_image, num_parallel_calls=auto)
     .batch(batch_size)
     .prefetch(auto)
 )
@@ -280,7 +280,7 @@ history = model.fit(
     
 <div class="k-default-codeblock">
 ```
-1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 186ms/step
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 224ms/step
 ```
 </div>
 
@@ -293,7 +293,7 @@ history = model.fit(
 ```
 Sample Prediction after epoch 5
 
-920/920 ━━━━━━━━━━━━━━━━━━━━ 963s 1s/step - loss: 0.1811 - sparse_categorical_accuracy: 0.9280 - val_loss: 0.2134 - val_sparse_categorical_accuracy: 0.9223
+920/920 ━━━━━━━━━━━━━━━━━━━━ 772s 838ms/step - loss: 0.1787 - sparse_categorical_accuracy: 0.9294 - val_loss: 0.2086 - val_sparse_categorical_accuracy: 0.9246
 ```
 </div>
 
@@ -310,7 +310,7 @@ show_predictions(test_ds, 5)
     
 <div class="k-default-codeblock">
 ```
-1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 136ms/step
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 236ms/step
 ```
 </div>
 
@@ -321,7 +321,7 @@ show_predictions(test_ds, 5)
     
 <div class="k-default-codeblock">
 ```
-1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 97ms/step
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 168ms/step
 ```
 </div>
 
@@ -332,7 +332,7 @@ show_predictions(test_ds, 5)
     
 <div class="k-default-codeblock">
 ```
-1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 104ms/step
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 150ms/step
 ```
 </div>
 
@@ -343,7 +343,7 @@ show_predictions(test_ds, 5)
     
 <div class="k-default-codeblock">
 ```
-1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 100ms/step
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 110ms/step
 ```
 </div>
 
@@ -354,7 +354,7 @@ show_predictions(test_ds, 5)
     
 <div class="k-default-codeblock">
 ```
-1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 343ms/step
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 127ms/step
 ```
 </div>
 
