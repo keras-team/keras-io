@@ -233,13 +233,12 @@ model.fit(dataset, epochs=10)</code></pre>
                   <div class="code__copy--tooltip">Copied</div>
                 </button>
                 <pre><code class="language-python">causal_lm = keras_hub.models.CausalLM.from_preset(
-  "gemma2_instruct_2b_en",
-  dtype="float16",
+  "gemma4_instruct_2b",
+  dtype="bfloat16",
 )
-prompt = """&lt;start_of_turn&gt;user
-Write python code to print the first 100 primes.
-&lt;end_of_turn&gt;
-&lt;start_of_turn&gt;model
+prompt = """&lt;|turn&gt;user
+Write python code to print the first 100 primes.&lt;turn|&gt;
+&lt;|turn&gt;model
 """
 text_output = causal_lm.generate(prompt, max_length=512)
 
@@ -435,34 +434,34 @@ history = model.fit(
 
             <div class="models__card">
               <div class="models__card--contanier">
-                <h4 class="models__card--title">GEMMA</h4>
+                <h4 class="models__card--title">GEMMA 4</h4>
                 <p class="models__card--description">
-                  Google’s family of lightweight language models built from the same research and technology used to create Gemini.
+                  Google’s family of open multimodal and agentic models built from the same research and technology used to create Gemini.
                 </p>
-                <a class="button__square button__square--white" href="/keras_hub/api/models/gemma/">VIEW DOCUMENTATION</a>
-                <a class="button__square button__square--white" href="https://www.kaggle.com/models/google/gemma-2" target="_blank">KAGGLE DETAILS</a>
+                <a class="button__square button__square--white" href="/keras_hub/api/models/gemma4/">VIEW DOCUMENTATION</a>
+                <a class="button__square button__square--white" href="https://www.kaggle.com/models/keras/gemma4" target="_blank">KAGGLE DETAILS</a>
               </div>
             </div>
 
             <div class="models__card">
               <div class="models__card--contanier">
-                <h4 class="models__card--title">LLAMA</h4>
+                <h4 class="models__card--title">QWEN 3.8</h4>
                 <p class="models__card--description">
-                  Meta’s flagship open text generation models available in a wide range of sizes and precisions.
+                  Alibaba’s flagship open-weight multimodal and reasoning models, excelling at coding, math, and agentic workflows.
                 </p>
-                <a class="button__square button__square--white" href="/keras_hub/api/models/llama3/">VIEW DOCUMENTATION</a>
-                <a class="button__square button__square--white" href="https://www.kaggle.com/models/keras/llama3" target="_blank">KAGGLE DETAILS</a>
+                <a class="button__square button__square--white" href="/keras_hub/api/models/qwen3_5/">VIEW DOCUMENTATION</a>
+                <a class="button__square button__square--white" href="https://www.kaggle.com/models/keras/qwen3-8" target="_blank">KAGGLE DETAILS</a>
               </div>
             </div>
 
             <div class="models__card">
               <div class="models__card--contanier">
-                <h4 class="models__card--title">STABLE DIFFUSION</h4>
+                <h4 class="models__card--title">GPT-OSS</h4>
                 <p class="models__card--description">
-                  Generate image content with this state of the art diffusion model from Stability AI.
+                  OpenAI’s open-weight Mixture-of-Experts reasoning models built for high-efficiency text generation across 128k context.
                 </p>
-                <a class="button__square button__square--white" href="/keras_hub/api/models/stable_diffusion_3/">VIEW DOCUMENTATION</a>
-                <a class="button__square button__square--white" href="https://www.kaggle.com/models/keras/stablediffusion-3.5" target="_blank">KAGGLE DETAILS</a>
+                <a class="button__square button__square--white" href="/keras_hub/api/models/gpt_oss/">VIEW DOCUMENTATION</a>
+                <a class="button__square button__square--white" href="https://www.kaggle.com/models/keras/gpt-oss" target="_blank">KAGGLE DETAILS</a>
               </div>
             </div>
 

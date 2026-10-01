@@ -146,11 +146,9 @@ from keras_hub.vllm import KerasHubLLM
 
 PRESET = "gemma3_instruct_1b"
 
-with (
-    open("vllm_init.log", "w") as log,
-    redirect_stdout(log),
-    redirect_stderr(log),
-):
+with open("vllm_init.log", "w") as log, \
+     redirect_stdout(log), \
+     redirect_stderr(log):
     llm = KerasHubLLM(f"keras_hub:{PRESET}", max_model_len=512)
 
 print("model loaded")
@@ -190,7 +188,7 @@ tokens applies. That is short. Pass `SamplingParams` when you want more.
 
 from vllm import SamplingParams
 
-greedy = SamplingParams(temperature=0.0, max_tokens=48)
+greedy = SamplingParams(temperature=0.0, max_tokens=140)
 
 output = llm.generate(prompt, greedy, use_tqdm=False)[0]
 print(output.prompt + output.outputs[0].text)
@@ -259,13 +257,6 @@ instead of falling back to something slower or wrong: the serving wrapper
 counts how many attention layers dispatched to the paged kernel, and raises
 if that does not match the number of transformer layers.
 
-Two limits are worth knowing before you plan around this. Only `CausalLM`
-presets are served, since this integration targets autoregressive text
-generation. And vision-language models are not supported: the attention path
-does not currently accept the custom mask a bidirectional image encoder needs.
-"""
-
-"""
 ## Next steps
 
 - Try a different preset from the table above. Load one model per runtime
