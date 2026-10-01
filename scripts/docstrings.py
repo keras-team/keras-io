@@ -8,7 +8,7 @@ import importlib
 import itertools
 from collections import defaultdict
 from collections import namedtuple
-import copy
+
 
 import render_presets
 
@@ -160,18 +160,10 @@ def make_source_link(cls, project_url):
         return None
 
     base_module = cls.__module__.split(".")[0]
+    if base_module not in project_url:
+        return None
     project_url = project_url[base_module]
     assert project_url.endswith("/"), f"{base_module} not found"
-    project_url_version = project_url.split("/")[-2].removeprefix("v")
-    module_version = copy.copy(importlib.import_module(base_module).__version__)
-    if ".dev" in module_version:
-        module_version = project_url_version[: module_version.find(".dev")]
-    if module_version != project_url_version:
-        raise RuntimeError(
-            f"For project {base_module}, URL {project_url} "
-            f"has version number {project_url_version} which does not match the "
-            f"current imported package version {module_version}"
-        )
     path = cls.__module__.replace(".", "/")
     if base_module in ("tf_keras",):
         path = path.replace("/src/", "/")
@@ -181,6 +173,7 @@ def make_source_link(cls, project_url):
         f"[[source]]({project_url}{path}.py#L{line})"
         f"</span>"
     )
+
 
 
 def code_snippet(snippet):
