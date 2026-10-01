@@ -2,7 +2,7 @@
 Title: Sentence embeddings using Siamese RoBERTa-networks
 Author: [Mohammed Abu El-Nasr](https://github.com/abuelnasr0)
 Date created: 2023/07/14
-Last modified: 2023/07/14
+Last modified: 2026/07/17
 Description: Fine-tune a RoBERTa model to generate sentence embeddings using KerasHub.
 Accelerator: GPU
 """
@@ -126,14 +126,22 @@ def change_range(x):
 def prepare_dataset(dataset, num_batches, batch_size):
     dataset = dataset.map(
         lambda z: (
-            [z["sentence1"], z["sentence2"]],
-            [tf.cast(change_range(z["label"]), tf.float32)],
+            (
+                z["sentence1"],
+                z["sentence2"],
+            ),
+            tf.expand_dims(
+                tf.cast(change_range(z["label"]), tf.float32),
+                axis=-1,
+            ),
         ),
         num_parallel_calls=AUTOTUNE,
     )
+
     dataset = dataset.batch(batch_size)
     dataset = dataset.take(num_batches)
     dataset = dataset.prefetch(AUTOTUNE)
+
     return dataset
 
 
@@ -170,15 +178,16 @@ to apply the mean pooling to the backbone outputs. We will pass the padding mask
 layer to exclude padded tokens from being averaged.
 - A normalization layer to normalize the embeddings as we are using the cosine similarity.
 """
-
 preprocessor = keras_hub.models.RobertaPreprocessor.from_preset("roberta_base_en")
 backbone = keras_hub.models.RobertaBackbone.from_preset("roberta_base_en")
-inputs = keras.Input(shape=(1,), dtype="string", name="sentence")
+inputs = keras.Input(shape=(), dtype="string", name="sentence")
 x = preprocessor(inputs)
 h = backbone(x)
 embedding = keras.layers.GlobalAveragePooling1D(name="pooling_layer")(
-    h, x["padding_mask"]
+    h,
+    mask=x["padding_mask"],
 )
+
 n_embedding = keras.layers.UnitNormalization(axis=1)(embedding)
 roberta_normal_encoder = keras.Model(inputs=inputs, outputs=n_embedding)
 
@@ -200,14 +209,28 @@ sentences.
 
 class RegressionSiamese(keras.Model):
     def __init__(self, encoder, **kwargs):
-        inputs = keras.Input(shape=(2,), dtype="string", name="sentences")
-        sen1, sen2 = keras.ops.split(inputs, 2, axis=1)
+        sen1 = keras.Input(
+            shape=(),
+            dtype="string",
+            name="sentence1",
+        )
+        sen2 = keras.Input(
+            shape=(),
+            dtype="string",
+            name="sentence2",
+        )
         u = encoder(sen1)
         v = encoder(sen2)
-        cosine_similarity_scores = keras.ops.matmul(u, keras.ops.transpose(v))
 
+        # elementwise dot product per pair, not batch cross-similarity
+        cosine_similarity_scores = keras.ops.sum(
+            u * v,
+            axis=-1,
+            keepdims=True,
+        )
+        # Explicitly initialize the Functional model using inputs and outputs
         super().__init__(
-            inputs=inputs,
+            inputs=[sen1, sen2],
             outputs=cosine_similarity_scores,
             **kwargs,
         )
@@ -312,10 +335,20 @@ AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 
 def prepare_wiki_data(dataset, num_batches):
+    dataset = dataset.unbatch()
     dataset = dataset.map(
-        lambda z: ((z["Sentence1"], z["Sentence2"], z["Sentence3"]), 0)
+        lambda z: (
+            (
+                z["Sentence1"],
+                z["Sentence2"],
+                z["Sentence3"],
+            ),
+            0,
+        ),
+        num_parallel_calls=AUTOTUNE,
     )
-    dataset = dataset.batch(6)
+    dataset = dataset.batch(TRAIN_BATCH_SIZE)
+
     dataset = dataset.take(num_batches)
     dataset = dataset.prefetch(AUTOTUNE)
     return dataset
@@ -349,16 +382,21 @@ sentence.
 
 preprocessor = keras_hub.models.RobertaPreprocessor.from_preset("roberta_base_en")
 backbone = keras_hub.models.RobertaBackbone.from_preset("roberta_base_en")
-input = keras.Input(shape=(1,), dtype="string", name="sentence")
-
-x = preprocessor(input)
+inputs = keras.Input(
+    shape=(),
+    dtype="string",
+    name="triplet_sentence",
+)  # use a unique name
+x = preprocessor(inputs)
 h = backbone(x)
 embedding = keras.layers.GlobalAveragePooling1D(name="pooling_layer")(
-    h, x["padding_mask"]
+    h,
+    mask=x["padding_mask"],
 )
-
-roberta_encoder = keras.Model(inputs=input, outputs=embedding)
-
+roberta_encoder = keras.Model(
+    inputs=inputs,
+    outputs=embedding,
+)
 
 roberta_encoder.summary()
 
@@ -374,23 +412,48 @@ embedding for each sentence, and we will calculate the `positive_dist` and
 
 class TripletSiamese(keras.Model):
     def __init__(self, encoder, **kwargs):
-        anchor = keras.Input(shape=(1,), dtype="string")
-        positive = keras.Input(shape=(1,), dtype="string")
-        negative = keras.Input(shape=(1,), dtype="string")
+        anchor = keras.Input(
+            shape=(),
+            dtype="string",
+            name="anchor",
+        )
+        positive = keras.Input(
+            shape=(),
+            dtype="string",
+            name="positive",
+        )
+        negative = keras.Input(
+            shape=(),
+            dtype="string",
+            name="negative",
+        )
 
         ea = encoder(anchor)
         ep = encoder(positive)
         en = encoder(negative)
 
-        positive_dist = keras.ops.sum(keras.ops.square(ea - ep), axis=1)
-        negative_dist = keras.ops.sum(keras.ops.square(ea - en), axis=1)
+        positive_dist = keras.ops.sum(
+            keras.ops.square(ea - ep),
+            axis=-1,
+        )
+        negative_dist = keras.ops.sum(
+            keras.ops.square(ea - en),
+            axis=-1,
+        )
 
-        positive_dist = keras.ops.sqrt(positive_dist)
-        negative_dist = keras.ops.sqrt(negative_dist)
+        positive_dist = keras.ops.sqrt(positive_dist + 1e-12)
+        negative_dist = keras.ops.sqrt(negative_dist + 1e-12)
 
-        output = keras.ops.stack([positive_dist, negative_dist], axis=0)
+        output = keras.ops.stack(
+            [positive_dist, negative_dist],
+            axis=-1,
+        )
 
-        super().__init__(inputs=[anchor, positive, negative], outputs=output, **kwargs)
+        super().__init__(
+            inputs=[anchor, positive, negative],
+            outputs=output,
+            **kwargs,
+        )
 
         self.encoder = encoder
 
@@ -420,10 +483,11 @@ class TripletLoss(keras.losses.Loss):
         self.margin = margin
 
     def call(self, y_true, y_pred):
-        positive_dist, negative_dist = tf.unstack(y_pred, axis=0)
+        positive_dist = y_pred[:, 0]
+        negative_dist = y_pred[:, 1]
 
         losses = keras.ops.relu(positive_dist - negative_dist + self.margin)
-        return keras.ops.mean(losses, axis=0)
+        return keras.ops.mean(losses)
 
 
 """
