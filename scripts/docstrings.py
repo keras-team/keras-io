@@ -104,7 +104,7 @@ class KerasDocumentationGenerator:
         subblocks.append(f"### `{get_name(object_)}` {get_type(object_)}\n")
         subblocks.append(code_snippet(signature))
 
-        docstring = inspect.getdoc(object_)
+        docstring = get_docstring(object_)
         if docstring:
             docstring = self.process_docstring(docstring)
             subblocks.append(docstring)
@@ -500,6 +500,62 @@ def insert_in_string(target, string_to_insert, start, end):
     target_start_cut = target[:start]
     target_end_cut = target[end:]
     return target_start_cut + string_to_insert + target_end_cut
+
+
+def get_docstring(object_):
+    """Like `inspect.getdoc()`, but robust to unindented code injected into
+    an indented docstring (e.g. Keras' shared preprocessing-layer examples).
+    """
+    docstring = inspect.getdoc(object_)
+    if docstring:
+        docstring = dedent_docstring_body(docstring)
+    return docstring
+
+
+def dedent_docstring_body(docstring):
+    """Remove the common indentation of non-code lines after the first line.
+
+    `inspect.getdoc()` can't dedent a docstring if any line (e.g. an injected,
+    unindented code example) starts at column 0. Here, fenced code blocks are
+    ignored when computing the indentation. Each code block is then dedented
+    as a unit, by at most the indentation of its opening fence, so the
+    relative indentation inside the code is preserved.
+    """
+    lines = docstring.split("\n")
+    # Amount to dedent each line by; `None` means "prose line".
+    block_dedent = []
+    fence_indent = None  # Indentation of the current block's opening fence.
+    for line in lines:
+        is_fence = line.lstrip().startswith("```")
+        if fence_indent is None and is_fence:
+            fence_indent = count_leading_spaces(line)
+            block_dedent.append(fence_indent)
+        elif fence_indent is not None:
+            block_dedent.append(fence_indent)
+            if is_fence:
+                fence_indent = None
+        else:
+            block_dedent.append(None)
+
+    indents = [
+        count_leading_spaces(line)
+        for line, dedent in zip(lines[1:], block_dedent[1:])
+        if line.strip() and dedent is None
+    ]
+    indent = min(indents) if indents else 0
+    if indent == 0:
+        return docstring
+
+    result = [lines[0]]
+    for line, dedent in zip(lines[1:], block_dedent[1:]):
+        if not line.strip():
+            result.append("")  # Whitespace-only lines become empty lines.
+        else:
+            amount = indent if dedent is None else min(indent, dedent)
+            result.append(line[amount:])
+    while result and not result[-1]:
+        result.pop()  # Drop trailing blank lines, as `inspect.cleandoc` does.
+    return "\n".join(result)
 
 
 def remove_indentation(string):
