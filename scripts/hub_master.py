@@ -2084,6 +2084,68 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "modern_bert/",
+            "title": "ModernBERT",
+            "toc": True,
+            "children": [
+                {
+                    "path": "modern_bert_tokenizer",
+                    "title": "ModernBertTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.ModernBertTokenizer",
+                        "keras_hub.tokenizers.ModernBertTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "modern_bert_backbone",
+                    "title": "ModernBertBackbone model",
+                    "generate": [
+                        "keras_hub.models.ModernBertBackbone",
+                        "keras_hub.models.ModernBertBackbone.from_preset",
+                        "keras_hub.models.ModernBertBackbone.token_embedding",
+                    ],
+                },
+                {
+                    "path": "modern_bert_text_classifier",
+                    "title": "ModernBertTextClassifier model",
+                    "generate": [
+                        "keras_hub.models.ModernBertTextClassifier",
+                        "keras_hub.models.ModernBertTextClassifier.from_preset",
+                        "keras_hub.models.ModernBertTextClassifier.backbone",
+                        "keras_hub.models.ModernBertTextClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "modern_bert_text_classifier_preprocessor",
+                    "title": "ModernBertTextClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.ModernBertTextClassifierPreprocessor",
+                        "keras_hub.models.ModernBertTextClassifierPreprocessor.from_preset",
+                        "keras_hub.models.ModernBertTextClassifierPreprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "modern_bert_masked_lm",
+                    "title": "ModernBertMaskedLM model",
+                    "generate": [
+                        "keras_hub.models.ModernBertMaskedLM",
+                        "keras_hub.models.ModernBertMaskedLM.from_preset",
+                        "keras_hub.models.ModernBertMaskedLM.backbone",
+                        "keras_hub.models.ModernBertMaskedLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "modern_bert_masked_lm_preprocessor",
+                    "title": "ModernBertMaskedLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.ModernBertMaskedLMPreprocessor",
+                        "keras_hub.models.ModernBertMaskedLMPreprocessor.from_preset",
+                        "keras_hub.models.ModernBertMaskedLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "moonshine/",
             "title": "Moonshine",
             "toc": True,
