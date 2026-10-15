@@ -618,11 +618,15 @@ audio, _ = tf.audio.decode_wav(
     tf.io.read_file(WAVS_PATH + train_df["file_name"].iloc[0] + ".wav")
 )
 # compute ground truth mel
-gt_mel = compute_mel_tf(audio, [-1])
+gt_mel = compute_mel_tf(ops.reshape(audio, [-1]))
+linear_mag = np.maximum(np.exp(gt_mel.numpy()) @ MEL_FB_INVERSE, 0.0)
 display(
     Audio(
-        librosa.griffin_lim(
-            tf.constant(np.maximum(np.exp(gt_mel.numpy()) @ MEL_FB_INV, 0.0))
+        librosa.griffinlim(
+            linear_mag.T,
+            hop_length=HOP,
+            win_length=WIN,
+            window="hann",
         ),
         rate=SR,
     )
