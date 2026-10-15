@@ -557,8 +557,26 @@ Finally, we demonstrate how to synthesize speech from text using the trained mod
 To synthesize speech from text, we run the trained model to predict a mel spectrogram, then invert the preprocessing on the spectrogram to recover a waveform. We use the Griffin-Lim algorithm: the predicted spectrogram is mapped back to linear-frequency magnitudes, and Griffin-Lim iteratively reconstructs the missing phase.
 """
 
-MEL_FB_INVERSE = np.linalg.pinv(MEL_FB_TF.numpy().T)  # [N_MELS, N_FFT//2+1]
+MEL_FB_INVERSE = np.linalg.pinv(MEL_FB_TF.numpy())
 
+def synthesize(text, model, stop_thr=0.5, iterations=10):
+    """Iteratively refine the prediction; trim at 3 consecutive stop tokens."""
+    ids = char_to_num(tf.strings.unicode_split(tf.strings.lower(text), "UTF-8"))
+    label = ops.pad(ids[:NB_CHARS_MAX], [[0, NB_CHARS_MAX - ops.shape(ids)[0]]])[None]
+    dec = ops.zeros((1, MAX_MEL_LEN, N_MELS * R))
+    for _ in range(iterations):
+        mel_pred, stop_pred = model.predict([label, dec], verbose=0)
+        # Right-shifted prediction becomes the next teacher-forcing input.
+        dec = ops.pad(ops.concatenate(
+            [ops.zeros_like(mel_pred[:, :1]), mel_pred[:, :-1]], 1),
+            [[0, 0], [0, MAX_MEL_LEN - mel_pred.shape[1]], [0, 0]])
+    end, run = mel_pred.shape[1], 0
+    for i, p in enumerate(stop_pred[0, :, 0]):
+        run = run + 1 if p > stop_thr else 0
+        if run >= 3:
+            end = i + 1
+            break
+    return mel_pred[0, :end]
 
 def mel_to_linear_mag(mel_spectrogram):
     if len(mel_spectrogram.shape) == 2:
@@ -601,10 +619,14 @@ def mel_hat_to_audio_librosa(mel_hat, n_iter=32):
 
     return audio_batch[0] if B == 1 else np.stack(audio_batch)
 
+# ── Test with both methods ──
+text = "Hello, this is a test of the Tacotron text-to-speech synthesis system."
+print(f'Synthesizing audio for: "{text}"\n')
+mel_hat = synthesize(text, model)
 
-audio_librosa = mel_hat_to_audio_librosa(mel_hat, n_iter=32)
+audio = mel_hat_to_audio_librosa(mel_hat, n_iter=32)
 print("\nLibrosa Griffin-Lim output:")
-display(Audio(audio_librosa, rate=SR))
+display(Audio(audio, rate=SR))
 
 """The sound sounds robotic but how much of the "robotic" sound is the vocoder and not the model? Let's preprocess a ground-truth audio into a mel-spectrogram and use the Griffin-Lim algorithm to vocode it."""
 
