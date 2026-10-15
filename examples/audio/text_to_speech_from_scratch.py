@@ -199,32 +199,33 @@ Let's visualize a sample from the dataset to understand the data better.
 """
 
 
-def visualize_sample(dataset, df):
-    batch = next(iter(dataset))
-    spec_raw = batch[1][0][0].numpy()
-    nz = np.where(np.any(spec_raw != 0, axis=1))[0]
-    spec = np.transpose(spec_raw[: nz[-1] + 1] if nz.size else spec_raw)
-    label = tf.strings.reduce_join(num_to_char(batch[0][0][0])).numpy().decode("utf-8")
+def visualize_sample(df):
+    row = df.iloc[0]
+    file_name = row["file_name"]
+    label_text = row["normalized_transcription"]
+
+    audio, _ = tf.audio.decode_wav(
+        tf.io.read_file(WAVS_PATH + file_name + ".wav")
+    )
+    audio_np = audio.numpy()
+    mel = compute_mel_tf(ops.reshape(audio, [-1]))
+    spec = np.transpose(mel.numpy())
 
     plt.figure(figsize=(8, 5))
     ax = plt.subplot(2, 1, 1)
-    ax.imshow(spec, vmax=1)
-    ax.set_title(label)
+    ax.imshow(spec, vmax=1, aspect="auto", origin="lower")
+    ax.set_title(label_text)
     ax.axis("off")
 
-    audio, _ = tf.audio.decode_wav(
-        tf.io.read_file(WAVS_PATH + df["file_name"].iloc[0] + ".wav")
-    )
-    audio = audio.numpy()
     ax = plt.subplot(2, 1, 2)
-    plt.plot(audio)
+    plt.plot(audio_np)
     ax.set_title("Signal Wave")
-    ax.set_xlim(0, len(audio))
-    display(Audio(np.transpose(audio), rate=SR))
+    ax.set_xlim(0, len(audio_np))
+    display(Audio(np.transpose(audio_np), rate=SR))
     plt.show()
 
 
-visualize_sample(train_dataset, train_df)
+visualize_sample(train_df)
 
 """The visualization shows both the mel spectrogram and waveform for a sample, along with it's text transcription. The spectrogram displays time on the x-axis and frequency bands on the y-axis, with intensity representing audio energy.
 
@@ -531,7 +532,6 @@ The attention visualizations show how the model learns to align characters with 
 
 """
 
-model.load_weights("/kaggle/working/checkpoints/tacotron_v2_epoch_250.weights.h5")
 
 checkpoint_cb = keras.callbacks.ModelCheckpoint(
     filepath="tacotron_best.weights.h5",
@@ -602,12 +602,6 @@ def mel_hat_to_audio_librosa(mel_hat, n_iter=32):
     return audio_batch[0] if B == 1 else np.stack(audio_batch)
 
 
-# ── Test with both methods ──
-text = "At that station, the safe were given out, heavy with shot and gold, the thieves went on to dover and by-and-by"
-print(f'Synthesizing audio for: "{text}"\n')
-
-mel_hat = synthesize(text, model)
-
 audio_librosa = mel_hat_to_audio_librosa(mel_hat, n_iter=32)
 print("\nLibrosa Griffin-Lim output:")
 display(Audio(audio_librosa, rate=SR))
@@ -627,6 +621,7 @@ display(
             hop_length=HOP,
             win_length=WIN,
             window="hann",
+
         ),
         rate=SR,
     )
