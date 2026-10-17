@@ -965,6 +965,7 @@ MODELS_MASTER = {
                         "keras_hub.models.DiffusionGemmaBlockDiffusionLMPreprocessor",
                         "keras_hub.models.DiffusionGemmaBlockDiffusionLMPreprocessor.from_preset",
                         "keras_hub.models.DiffusionGemmaBlockDiffusionLMPreprocessor.tokenizer",
+                        "keras_hub.models.DiffusionGemmaBlockDiffusionLMPreprocessor.image_converter",
                     ],
                 },
             ],
