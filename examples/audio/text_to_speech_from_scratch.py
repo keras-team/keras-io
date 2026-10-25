@@ -1,11 +1,13 @@
-# -*- coding: utf-8 -*-
 """
-**Title:** Text-to-Speech from Scratch <br>
-**Author:** [Abdulraheem Kasim](https://www.linkedin.com/in/kasim-abdulrahim/) <br>
-**Date created:** 2026/10/14<br>
-**Description:** Training a Tacotron model for text-to-speech. <br>
-**Accelerator:** GPU
+Title: Text-to-Speech from Scratch
+Author: [Abdulraheem Kasim](https://www.linkedin.com/in/kasim-abdulrahim/)
+Date created: 2026/10/25
+Last modified: 2026/10/25
+Description: Training a Tacotron model for text-to-speech.
+Accelerator: GPU
+"""
 
+"""
 ## Introduction
 
 Text-to-speech, also known as speech synthesis, is the task of converting written text into natural-sounding speech. Modern neural TTS systems learn this mapping directly from paired text and audio using deep learning, eliminating the need for handcrafted linguistic and acoustic features.
@@ -26,29 +28,31 @@ The model is trained on the **LJSpeech** dataset, a publicly available corpus co
 
 ## Setup
 First, let's import the necessary libraries and configure hyperparameters for our model.
+
+To switch backend, change `KERAS_BACKEND` below and **restart the kernel** —
+the backend is fixed at the first `import keras` (and importing `tensorflow`
+or `jax` first can silently pin the backend to TensorFlow).
 """
 
-# import os
+import os
 
-import numpy as np
-import pandas as pd
+os.environ["KERAS_BACKEND"] = "jax"  # any of "jax", "torch", "tensorflow"
 
-# import torch
-import tensorflow as tf
 import keras
 import librosa
-from keras import ops, layers
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from IPython.display import Audio, display
+from keras import layers, ops
 
-# from speechbrain.inference.vocoders import HIFIGAN
-
-# ── Hyperparameters ──
+# Hyperparameters
 N_FFT, SR, HOP, WIN, N_MELS = 1024, 22050, 256, 1024, 80
 R, MAX_MEL_LEN, NB_CHARS_MAX, K1 = 5, 200, 200, 16
-F_MIN, F_MAX, BATCH_SIZE, EPOCHS, TRAIN_RATIO = 0.0, 8000.0, 32, 100, 0.15
+F_MIN, F_MAX, BATCH_SIZE, EPOCHS, TRAIN_RATIO = 0.0, 8000.0, 32, 1, 0.15
 
-"""## Hyperparameters
+"""
+## Hyperparameters
 - **N_FFT**: Fast Fourier Transform window size for spectrogram computation.
 - **SR**: Audio sample rate.
 - **HOP**: Hop length between frames.
@@ -97,30 +101,24 @@ train_df = metadata_df.iloc[: int(len(metadata_df) * TRAIN_RATIO)]
 # 10% of training data for validation
 val_df = metadata_df.iloc[len(train_df) : len(train_df) + int(len(train_df) * 0.1)]
 
-"""## Data Preprocessing
+"""
+## Data Preprocessing
 ### Character Vocabulary and Mel Filterbank
 We create a character vocabulary and define a mel filterbank matrix for mel spectrogram computation.
 """
 
-# ── Character vocabulary and log-mel filterbank ──
+# Character vocabulary and log-mel filterbank
 CHARACTERS = list("abcdefghijklmnopqrstuvwxyz'?!;-, ")
-char_to_num = keras.layers.StringLookup(vocabulary=CHARACTERS, oov_token="")
-num_to_char = keras.layers.StringLookup(
-    vocabulary=char_to_num.get_vocabulary(), oov_token="", invert=True
-)
-MEL_FB_TF = tf.constant(
-    librosa.filters.mel(  # [N_FFT // 2 + 1, N_MELS]
-        sr=SR,
-        n_fft=N_FFT,
-        n_mels=N_MELS,
-        fmin=F_MIN,
-        fmax=F_MAX,
-        htk=False,
-        norm="slaney",
-    ).T.astype(np.float32)
-)
+CHAR_TO_ID = {c: i + 1 for i, c in enumerate(CHARACTERS)}
+ID_TO_CHAR = [""] + CHARACTERS
+VOCAB_SIZE = 1 + len(CHARACTERS)
 
-"""## Audio and Text Processing Functions
+MEL_FB = librosa.filters.mel(  # [N_FFT // 2 + 1, N_MELS]
+    sr=SR, n_fft=N_FFT, n_mels=N_MELS, fmin=F_MIN, fmax=F_MAX, htk=False, norm="slaney"
+).T.astype(np.float32)
+
+"""
+## Audio and Text Processing Functions
 These functions transform raw audio and text into inputs and targets.
 
 1. **Audio to Mel Spectrogram**: Converts raw audio to log-mel spectrograms using Short-Time Fourier Transform(STFT).
@@ -134,100 +132,101 @@ These functions transform raw audio and text into inputs and targets.
 5. **Text Encoding**: Converts text to character IDs with padding to maximum text length.
 
 This preprocessing ensures uniform input sizes for batch training and proper target formatting for the autoregressive decoder.
-
-
 """
 
 
-def compute_mel_tf(audio):
+def compute_mel(audio):
     """Waveform [samples] -> log-mel spectrogram [T, N_MELS]."""
-    audio = tf.pad(
-        tf.cast(audio, tf.float32), [[N_FFT // 2, N_FFT // 2]], mode="REFLECT"
+    S = np.abs(
+        librosa.stft(  # [N_FFT // 2 + 1, T]
+            audio.astype(np.float32),
+            n_fft=N_FFT,
+            hop_length=HOP,
+            win_length=WIN,
+            window="hann",
+            center=True,
+            pad_mode="reflect",
+        )
     )
-    stft = tf.signal.stft(audio, WIN, HOP, N_FFT, tf.signal.hann_window)
-    return tf.math.log(tf.maximum(tf.matmul(tf.abs(stft), MEL_FB_TF), 1e-5))
+    return np.log(np.maximum(S.T @ MEL_FB, 1e-5)).astype("float32")
 
 
 def encode_single_sample(wav_file, label):
     """(wav filename, transcript) -> ((text ids, decoder in), (mel, stop))."""
-    audio, _ = tf.audio.decode_wav(tf.io.read_file(WAVS_PATH + wav_file + ".wav"))
-    mel = ops.cast(compute_mel_tf(ops.reshape(audio, [-1])), "float32")
-    mel.set_shape([None, N_MELS])
+    audio, _ = librosa.load(WAVS_PATH + wav_file + ".wav", sr=SR)
+    mel = compute_mel(audio)
     # Pad to a multiple of R, then fix length at MAX_MEL_LEN decoder steps.
-    t = ops.shape(mel)[0]
-    mel = ops.pad(mel, [[0, (R - t % R) % R], [0, 0]])
-    real_len = ops.shape(mel)[0] // R  # true decoder length, in steps
+    t = mel.shape[0]
+    mel = np.pad(mel, ((0, (R - t % R) % R), (0, 0)))
+    real_len = mel.shape[0] // R  # true decoder length, in steps
     max_frames = MAX_MEL_LEN * R
-    mel = ops.pad(mel, [[0, ops.maximum(0, max_frames - ops.shape(mel)[0])], [0, 0]])
-    mel = ops.reshape(mel[:max_frames], (MAX_MEL_LEN, N_MELS * R))
+    mel = np.pad(mel, ((0, max(0, max_frames - mel.shape[0])), (0, 0)))
+    mel = mel[:max_frames].reshape(MAX_MEL_LEN, N_MELS * R)
     # Stop target (1 = padding); GO frame + right-shifted decoder input.
-    stop = ops.cast(
-        ops.arange(MAX_MEL_LEN) >= ops.minimum(real_len, MAX_MEL_LEN), "float32"
-    )
-    dec = ops.pad(mel[:-1], [[1, 0], [0, 0]])
-    label = char_to_num(tf.strings.unicode_split(tf.strings.lower(label), "UTF-8"))
-    label = ops.pad(label[:NB_CHARS_MAX], [[0, NB_CHARS_MAX - ops.shape(label)[0]]])
-    return (label, dec), (mel, stop[:, None])
+    stop = (np.arange(MAX_MEL_LEN) >= min(real_len, MAX_MEL_LEN)).astype("float32")
+    dec = np.pad(mel[:-1], ((1, 0), (0, 0)))
+    ids = np.asarray([CHAR_TO_ID.get(c, 0) for c in label.lower()], dtype="int32")[
+        :NB_CHARS_MAX
+    ]
+    ids = np.pad(ids, (0, NB_CHARS_MAX - ids.shape[0]))
+    return (ids, dec.astype("float32")), (mel.astype("float32"), stop[:, None])
 
 
-"""## Creating `Dataset` objects
+"""
+## Creating `Dataset` objects
 
-We create a `tf.data.Dataset` object that yields
-the transformed elements, in the same order as they
-appeared in the input.
+We preprocess each split into NumPy arrays. These arrays feed `model.fit`
 """
 
 
-def make_dataset(df):
-    return (
-        tf.data.Dataset.from_tensor_slices(
-            (df["file_name"].tolist(), df["normalized_transcription"].tolist())
-        )
-        .map(encode_single_sample, num_parallel_calls=tf.data.AUTOTUNE)
-        .cache()
-        .shuffle(4096)
-        .batch(BATCH_SIZE)
-        .prefetch(tf.data.AUTOTUNE)
-    )
+def make_arrays(df):
+    """Preprocess a split into ([ids, dec_in], [mel, stop]) NumPy arrays."""
+    enc, dec, mel, stop = [], [], [], []
+    for i, (f, txt) in enumerate(zip(df["file_name"], df["normalized_transcription"])):
+        (ids, d), (m, s) = encode_single_sample(f, txt)
+        enc.append(ids)
+        dec.append(d)
+        mel.append(m)
+        stop.append(s)
+        if (i + 1) % 500 == 0:
+            print(f"  preprocessed {i + 1}/{len(df)}")
+    return [np.stack(enc), np.stack(dec)], [np.stack(mel), np.stack(stop)]
 
 
-train_dataset = make_dataset(train_df)
-val_dataset = make_dataset(val_df)
+train_x, train_y = make_arrays(train_df)
+val_x, val_y = make_arrays(val_df)
 
-"""## Visualize the data
+"""
+## Visualize the data
 Let's visualize a sample from the dataset to understand the data better.
 """
 
 
-def visualize_sample(df):
-    row = df.iloc[0]
-    file_name = row["file_name"]
-    label_text = row["normalized_transcription"]
-
-    audio, _ = tf.audio.decode_wav(
-        tf.io.read_file(WAVS_PATH + file_name + ".wav")
-    )
-    audio_np = audio.numpy()
-    mel = compute_mel_tf(ops.reshape(audio, [-1]))
-    spec = np.transpose(mel.numpy())
+def visualize_sample(x, y, df):
+    spec_raw = y[0][0]  # first sample's mel target [MAX_MEL_LEN, N_MELS * R]
+    nz = np.where(np.any(spec_raw != 0, axis=1))[0]
+    spec = np.transpose(spec_raw[: nz[-1] + 1] if nz.size else spec_raw)
+    label = "".join(ID_TO_CHAR[i] for i in x[0][0] if i != 0)
 
     plt.figure(figsize=(8, 5))
     ax = plt.subplot(2, 1, 1)
-    ax.imshow(spec, vmax=1, aspect="auto", origin="lower")
-    ax.set_title(label_text)
+    ax.imshow(spec, vmax=1)
+    ax.set_title(label)
     ax.axis("off")
 
+    audio, _ = librosa.load(WAVS_PATH + df["file_name"].iloc[0] + ".wav", sr=SR)
     ax = plt.subplot(2, 1, 2)
-    plt.plot(audio_np)
+    plt.plot(audio)
     ax.set_title("Signal Wave")
-    ax.set_xlim(0, len(audio_np))
-    display(Audio(np.transpose(audio_np), rate=SR))
+    ax.set_xlim(0, len(audio))
+    display(Audio(audio, rate=SR))
     plt.show()
 
 
-visualize_sample(train_df)
+visualize_sample(train_x, train_y, train_df)
 
-"""The visualization shows both the mel spectrogram and waveform for a sample, along with it's text transcription. The spectrogram displays time on the x-axis and frequency bands on the y-axis, with intensity representing audio energy.
+"""
+The visualization shows both the mel spectrogram and waveform for a sample, along with it's text transcription. The spectrogram displays time on the x-axis and frequency bands on the y-axis, with intensity representing audio energy.
 
 ## Model Architecture
 
@@ -287,7 +286,8 @@ def cbhg_encoder(inp, K):
     return layers.Bidirectional(layers.GRU(128, return_sequences=True))(x)
 
 
-"""**Attention Mechanism**: The location-sensitive attention works as follows:
+"""
+**Attention Mechanism**: The location-sensitive attention works as follows:
 1. **Location features**: Uses convolutional filters on the cumulative attention to focus on relevant encoder positions.
 
 2. **Energy calculation**: Computes attention energies using encoder outputs, decoder state, and location features.
@@ -351,72 +351,53 @@ class TacotronDecoder(keras.layers.Layer):
         enc_mask = ops.ones((B, T_enc), dtype=dtype) if enc_mask is None else enc_mask
         if teacher_forcing is None:  # all-zero dec_in -> autoregressive mode
             teacher_forcing = ops.any(ops.not_equal(dec_in, 0.0))
+        prenet_flat = self.prenet(
+            ops.reshape(dec_in, (-1, self.n_mels * self.r)), training=training
+        )  # [B*T_dec, 128]
+        prenet_dec = ops.reshape(prenet_flat, (-1, self.T_dec, 128))  # [B, T_dec, 128]
         mask_f32 = ops.cast(enc_mask, "float32")
         enc_proj = ops.matmul(enc_out, self.W_enc)
-        zeros = lambda *shape: ops.zeros(shape, dtype=dtype)
-        mel_ta = tf.TensorArray("float32", size=self.T_dec)
-        stop_ta = tf.TensorArray("float32", size=self.T_dec)
-        attn_ta = tf.TensorArray("float32", size=self.T_dec)
 
-        def body(
-            t, prev_frame, cum_attn, attn_h, h1, h2, ctx, mel_ta, stop_ta, attn_ta
-        ):
-            # Teacher forcing: ground-truth frame; AR: own previous prediction.
-            frame = ops.where(teacher_forcing, dec_in[:, t, :], prev_frame)
-            x = self.prenet(frame, training=training)
+        def step(carry, x):
+            # Teacher forcing: precomputed prenet features (x);
+            # AR: prenet of own previous prediction (dropout off).
+            prev_frame, cum_attn, attn_h, h1, h2, ctx = carry[:6]
+            h = ops.where(teacher_forcing, x, self.prenet(prev_frame, training=False))
             attn_out, [attn_h] = self.attn_rnn(
-                ops.concatenate([x, ctx], -1), [attn_h], training=training
+                ops.concatenate([h, ctx], -1), [attn_h], training=training
             )
             loc = ops.matmul(self.loc_conv(cum_attn), self.W_loc)  # location feature
-            e = tf.tanh(enc_proj + ops.matmul(attn_out, self.W_dec)[:, None] + loc)
-            score = ops.cast(tf.squeeze(ops.matmul(e, self.v), -1), "float32")
-            score += (1.0 - mask_f32) * -1e9  # mask out padded characters
-            attn = tf.nn.softmax(score, axis=-1)
+            e = ops.tanh(enc_proj + ops.matmul(attn_out, self.W_dec)[:, None] + loc)
+            score = ops.cast(ops.squeeze(ops.matmul(e, self.v), axis=-1), "float32")
+            score = score + (1.0 - mask_f32) * -1e9  # mask out padded characters
+            attn = ops.softmax(score, axis=-1)
             attn_c = ops.cast(attn, dtype)
-            cum_attn += tf.expand_dims(attn_c, -1)
-            ctx = ops.sum(tf.expand_dims(attn_c, -1) * enc_out, axis=1)
+            cum_attn = cum_attn + ops.expand_dims(attn_c, -1)
+            ctx = ops.sum(ops.expand_dims(attn_c, -1) * enc_out, axis=1)
             out1, [h1] = self.dec_rnn_1(
                 ops.concatenate([attn_out, ctx], -1), [h1], training=training
             )
             out2, [h2] = self.dec_rnn_2(out1, [h2], training=training)
             mel_out = self.mel_proj(out2)
-            mel_ta = mel_ta.write(t, ops.cast(mel_out, "float32"))
-            stop_ta = stop_ta.write(t, ops.cast(self.stop_proj(out2), "float32"))
-            attn_ta = attn_ta.write(t, attn)
-            return (
-                t + 1,
-                mel_out,
-                cum_attn,
-                attn_h,
-                h1,
-                h2,
-                ctx,
-                mel_ta,
-                stop_ta,
-                attn_ta,
-            )
+            stop_t = self.stop_proj(out2)
+            state = (mel_out, cum_attn, attn_h, h1, h2, ctx, stop_t, attn)
+            return state, state
 
-        *_, mel_ta, stop_ta, attn_ta = tf.while_loop(
-            cond=lambda t, *_: t < self.T_dec,
-            body=body,
-            loop_vars=(
-                tf.constant(0),
-                zeros(B, self.n_mels * self.r),
-                zeros(B, T_enc, 1),
-                zeros(B, 256),
-                zeros(B, 256),
-                zeros(B, 256),
-                zeros(B, enc_out.shape[-1]),
-                mel_ta,
-                stop_ta,
-                attn_ta,
-            ),
-            parallel_iterations=10,
-            swap_memory=True,
-            maximum_iterations=self.T_dec,
+        init = (
+            ops.zeros((B, self.n_mels * self.r), dtype),
+            ops.zeros((B, T_enc, 1), dtype),
+            ops.zeros((B, 256), dtype),
+            ops.zeros((B, 256), dtype),
+            ops.zeros((B, 256), dtype),
+            ops.zeros((B, enc_out.shape[-1]), dtype),
+            ops.zeros((B, 1), dtype),
+            ops.zeros((B, T_enc), "float32"),
         )
-        stack = lambda ta: ops.cast(tf.transpose(ta.stack(), [1, 0, 2]), dtype)
-        return stack(mel_ta), stack(stop_ta), stack(attn_ta)
+        _, (mel_t, _, _, _, _, _, stop_t, attn_t) = ops.scan(
+            step, init, xs=ops.transpose(prenet_dec, [1, 0, 2])
+        )
+        to_bmt = lambda x: ops.transpose(x, [1, 0, 2])  # [T, B, ...] -> [B, T, ...]
+        return to_bmt(mel_t), to_bmt(stop_t), to_bmt(attn_t)
 
 
 def get_tacotron_model(n_mels, r, k1, mel_time_length, vocabulary):
@@ -437,9 +418,6 @@ def get_tacotron_model(n_mels, r, k1, mel_time_length, vocabulary):
         [mel_hat, stop_hat, layers.Activation("linear", name="attn_out")(attn_w)],
     )
     return train_model, attn_model
-
-
-"""## Custom Learning Rate Schedules and Loss Functions"""
 
 
 class NoamSchedule(keras.optimizers.schedules.LearningRateSchedule):
@@ -474,12 +452,13 @@ def stop_token_bce(y_true, y_pred):
     return ops.mean(bce * ops.where(ops.equal(y_true, 1.0), 2.0, 1.0))
 
 
-"""## Training the Model
+"""
+## Training the Model
 Now we compile and train the model with custom loss functions and learning rate schedule.
 """
 
 model, attn_model = get_tacotron_model(
-    N_MELS, R, K1, MAX_MEL_LEN, vocabulary=char_to_num.get_vocabulary()
+    N_MELS, R, K1, MAX_MEL_LEN, vocabulary=ID_TO_CHAR
 )
 model.compile(
     optimizer=keras.optimizers.Adam(NoamSchedule(d_model=256)),
@@ -488,7 +467,8 @@ model.compile(
 )
 model.summary()
 
-"""## Training Callback for Visualization
+"""
+## Training Callback for Visualization
 We create a callback to visualize attention alignments during training.
 """
 
@@ -505,8 +485,8 @@ class AttentionCallback(keras.callbacks.Callback):
             return
         x, y = self.batch
         A = self.attn_model.predict(x, verbose=0)[2][0]  # [T_dec, T_enc]
-        n_chars = int(np.count_nonzero(x[0][0].numpy()))
-        stop = y[1][0].numpy()[:, 0]
+        n_chars = int(np.count_nonzero(x[0][0]))
+        stop = y[1][0][:, 0]
         dec_end = int(np.argmax(stop > 0.5)) if (stop > 0.5).any() else A.shape[0]
         plt.imshow(A[:dec_end, :n_chars].T, aspect="auto", origin="upper")
         plt.colorbar()
@@ -522,16 +502,15 @@ class AttentionCallback(keras.callbacks.Callback):
         )
 
 
-"""During training, we monitor several losses:
+"""
+During training, we monitor several losses:
 
 - **Mel Spectrogram Loss**: Masked MAE that only considers non-padded frames.
 
 - **Stop Token Loss**: Binary cross-entropy with 2x weight, teaching the decoder to reliably predict when the generation should halt.
 
 The attention visualizations show how the model learns to align characters with mel spectrogram frames. During training ,The plot goes from blurry to a sharp diagonal.
-
 """
-
 
 checkpoint_cb = keras.callbacks.ModelCheckpoint(
     filepath="tacotron_best.weights.h5",
@@ -542,41 +521,26 @@ checkpoint_cb = keras.callbacks.ModelCheckpoint(
     verbose=1,
 )
 
-batch = next(iter(train_dataset.take(1)))
+cb_batch = ([a[:BATCH_SIZE] for a in train_x], [b[:BATCH_SIZE] for b in train_y])
 history = model.fit(
-    train_dataset,
-    validation_data=val_dataset,
+    train_x,
+    train_y,
+    validation_data=(val_x, val_y),
+    batch_size=BATCH_SIZE,
     epochs=EPOCHS,
     verbose=2,
-    callbacks=[AttentionCallback(attn_model, batch), checkpoint_cb],
+    callbacks=[AttentionCallback(attn_model, cb_batch), checkpoint_cb],
 )
 
-"""## Inference: Text-to-Speech Synthesis
+"""
+## Inference: Text-to-Speech Synthesis
 Finally, we demonstrate how to synthesize speech from text using the trained model.
 
 To synthesize speech from text, we run the trained model to predict a mel spectrogram, then invert the preprocessing on the spectrogram to recover a waveform. We use the Griffin-Lim algorithm: the predicted spectrogram is mapped back to linear-frequency magnitudes, and Griffin-Lim iteratively reconstructs the missing phase.
 """
 
-MEL_FB_INVERSE = np.linalg.pinv(MEL_FB_TF.numpy())
+MEL_FB_INVERSE = np.linalg.pinv(MEL_FB)  # [N_MELS, N_FFT//2+1]
 
-def synthesize(text, model, stop_thr=0.5, iterations=10):
-    """Iteratively refine the prediction; trim at 3 consecutive stop tokens."""
-    ids = char_to_num(tf.strings.unicode_split(tf.strings.lower(text), "UTF-8"))
-    label = ops.pad(ids[:NB_CHARS_MAX], [[0, NB_CHARS_MAX - ops.shape(ids)[0]]])[None]
-    dec = ops.zeros((1, MAX_MEL_LEN, N_MELS * R))
-    for _ in range(iterations):
-        mel_pred, stop_pred = model.predict([label, dec], verbose=0)
-        # Right-shifted prediction becomes the next teacher-forcing input.
-        dec = ops.pad(ops.concatenate(
-            [ops.zeros_like(mel_pred[:, :1]), mel_pred[:, :-1]], 1),
-            [[0, 0], [0, MAX_MEL_LEN - mel_pred.shape[1]], [0, 0]])
-    end, run = mel_pred.shape[1], 0
-    for i, p in enumerate(stop_pred[0, :, 0]):
-        run = run + 1 if p > stop_thr else 0
-        if run >= 3:
-            end = i + 1
-            break
-    return mel_pred[0, :end]
 
 def mel_to_linear_mag(mel_spectrogram):
     if len(mel_spectrogram.shape) == 2:
@@ -585,6 +549,24 @@ def mel_to_linear_mag(mel_spectrogram):
     linear_mag = np.matmul(mel_np, MEL_FB_INVERSE)
     linear_mag = np.maximum(linear_mag, 0.0)
     return linear_mag
+
+
+def synthesize(text, model):
+    """Text -> predicted log-mel spectrogram [T_dec, N_MELS * R].
+
+    Feeds an all-zero decoder input, which switches TacotronDecoder into
+    autoregressive mode (the model feeds back its own predictions), then
+    crops the padding after the predicted stop point.
+    """
+    ids = np.asarray([CHAR_TO_ID.get(c, 0) for c in text.lower()], dtype="int32")[
+        :NB_CHARS_MAX
+    ]
+    ids = np.pad(ids, (0, NB_CHARS_MAX - ids.shape[0]))[None, ...]
+    dec_in = np.zeros((1, MAX_MEL_LEN, N_MELS * R), dtype="float32")
+    mel_hat, stop_hat = model.predict([ids, dec_in], verbose=0)
+    stop = stop_hat[0, :, 0]
+    end = int(np.argmax(stop > 0.5)) if (stop > 0.5).any() else MAX_MEL_LEN
+    return mel_hat[0, : max(end, 1)]
 
 
 def mel_hat_to_audio_librosa(mel_hat, n_iter=32):
@@ -619,36 +601,33 @@ def mel_hat_to_audio_librosa(mel_hat, n_iter=32):
 
     return audio_batch[0] if B == 1 else np.stack(audio_batch)
 
-# ── Test with both methods ──
-text = "Hello, this is a test of the Tacotron text-to-speech synthesis system."
+
+# Test with both methods
+text = "Hello, This is a text-to-speech example demonstrating speech sythesis through end to end neural architecture"
 print(f'Synthesizing audio for: "{text}"\n')
+
 mel_hat = synthesize(text, model)
 
-audio = mel_hat_to_audio_librosa(mel_hat, n_iter=32)
+audio_librosa = mel_hat_to_audio_librosa(mel_hat, n_iter=32)
 print("\nLibrosa Griffin-Lim output:")
-display(Audio(audio, rate=SR))
+display(Audio(audio_librosa, rate=SR))
+# The sound sounds robotic but how much of the "robotic" sound is the vocoder and not the model? Let's preprocess a ground-truth audio into a mel-spectrogram and use the Griffin-Lim algorithm to vocode it
 
-"""The sound sounds robotic but how much of the "robotic" sound is the vocoder and not the model? Let's preprocess a ground-truth audio into a mel-spectrogram and use the Griffin-Lim algorithm to vocode it."""
-
-audio, _ = tf.audio.decode_wav(
-    tf.io.read_file(WAVS_PATH + train_df["file_name"].iloc[0] + ".wav")
-)
-# compute ground truth mel
-gt_mel = compute_mel_tf(ops.reshape(audio, [-1]))
-linear_mag = np.maximum(np.exp(gt_mel.numpy()) @ MEL_FB_INVERSE, 0.0)
+# Ground-truth sanity check, backend-agnostic (no tf.* calls): vocode a
+# ground-truth mel with Griffin-Lim to isolate vocoder error from model error.
+audio, _ = librosa.load(WAVS_PATH + train_df["file_name"].iloc[0] + ".wav", sr=SR)
+gt_mel = compute_mel(audio)  # [T, N_MELS]
+gt_linear = np.maximum(np.exp(gt_mel) @ MEL_FB_INVERSE, 0.0)  # [T, N_FFT//2+1]
 display(
     Audio(
         librosa.griffinlim(
-            linear_mag.T,
-            hop_length=HOP,
-            win_length=WIN,
-            window="hann",
-
+            gt_linear.T, n_iter=32, hop_length=HOP, win_length=WIN, window="hann"
         ),
         rate=SR,
     )
 )
 
-"""## Conclusion
+"""
+## Conclusion
 This example demonstrated how to build a complete Tacotron-based text-to-speech system using Keras. This architecture represents the foundation of modern end-to-end TTS systems and can be extended with more advanced features like multi-speaker support, prosody modeling and vocoding with a neural vocoder.
 """
