@@ -17,21 +17,20 @@ experience of the observer, which makes it a natural task for automated image
 classification.
 
 In this example, we train a convolutional neural network to classify blood cell
-microscopy images into eight cell types, using the BloodMNIST dataset. We rely
-on [Mohammed Innat](https://www.linkedin.com/in/innat2k14/) 's
+microscopy images into eight cell types, using the BloodMNIST dataset. We use
+[Mohammed Innat](https://www.linkedin.com/in/innat2k14/)'s
 [medicai](https://github.com/innat/medic-ai), a Keras 3 library for 2D and
-3D medical image analysis, for the model architecture, the data augmentation,
-and the model explanation. We build the input pipeline with
-[PyGrain](https://github.com/google/grain). Since neither library is tied to a
-specific framework, the same code runs on the JAX, TensorFlow, and PyTorch
-backends.
+3D medical image analysis, for the data augmentation and the model explanation,
+and we build the input pipeline with [PyGrain](https://github.com/google/grain).
+Since neither library is tied to a specific framework, the same code runs on
+the JAX, TensorFlow, and PyTorch backends.
 
 We cover the following steps:
 
 1. Downloading the BloodMNIST dataset and exploring its classes.
 2. Building a backend-agnostic input pipeline with PyGrain.
 3. Augmenting whole batches with `medicai.transforms`.
-4. Training an EfficientNetV2 classifier from `medicai.models` with `fit()`.
+4. Training an EfficientNetV2 classifier from `keras.applications` with `fit()`.
 5. Evaluating the model on the held-out test set.
 6. Explaining predictions with Gradient-weighted Class Activation Mapping (Grad-CAM).
 
@@ -64,8 +63,7 @@ centered on a single cell that belongs to one of eight classes:
 - neutrophils
 - platelets
 
-BloodMNIST is released under the
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) license.
+BloodMNIST is released under the [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) license.
 """
 
 """
@@ -312,38 +310,24 @@ plt.show()
 """
 ## Build the model
 
-We use EfficientNetV2-B1 from `medicai.models`.
+We use EfficientNetV2-B1 from `keras.applications`.
 [EfficientNetV2](https://arxiv.org/abs/2104.00298) is a family of
 convolutional networks designed for fast training and good parameter
-efficiency. medicai infers whether to build the 2D or the 3D variant of an
-architecture from the rank of `input_shape`. With `include_top=True`, it adds a
-global pooling layer and a softmax classifier with `num_classes` outputs. We
-train the network from scratch.
+efficiency. With `include_top=True`, the model ends with a global pooling layer
+and a softmax classifier with `classes` outputs. We train the network from
+scratch (`weights=None`). Since our pipeline already scales the images to the
+`[0, 1]` range, we also disable the built-in preprocessing of the model.
 """
 
-model = medicai.models.EfficientNetV2B1(
-    input_shape=(image_size, image_size, 3),
+model = keras.applications.EfficientNetV2B1(
     include_top=True,
-    num_classes=num_classes,
+    weights=None,
+    input_shape=(image_size, image_size, 3),
+    classes=num_classes,
     classifier_activation="softmax",
+    include_preprocessing=False,
 )
 print(f"Number of parameters: {model.count_params() / 1e6:.2f}M")
-
-"""
-Batch normalization layers normalize their inputs with batch statistics during
-training, but with moving averages of these statistics during inference. In
-this model, the first (`stem_bn`) and the last (`top_bn`) batch normalization
-layers update their moving averages with the default momentum of `0.99`, while
-all the other ones use `0.9`, like the reference EfficientNetV2 implementation.
-With a momentum of `0.99`, the moving averages lag behind the weights, which
-change quickly at the beginning of training. As a result, the validation
-accuracy stays far below the training accuracy during the first epochs. We
-therefore set the momentum of every batch normalization layer to `0.9`.
-"""
-
-for layer in model.layers:
-    if isinstance(layer, keras.layers.BatchNormalization):
-        layer.momentum = 0.9
 
 """
 Training from scratch benefits from a relatively high initial learning rate
@@ -488,15 +472,15 @@ Keras 3 and medicai:
 `fit()`, `evaluate()`, and `predict()` consume directly, whatever the backend.
 - `medicai.transforms` provides augmentations implemented with `keras.ops`,
 which we apply to whole batches on the CPU while the model trains.
-- `medicai.models` provides 2D and 3D versions of common architectures, such as
-EfficientNetV2, that train with the standard Keras API.
+- `keras.applications` provides standard architectures, such as EfficientNetV2,
+that we can train from scratch with the standard Keras API.
 - `medicai.utils.GradCAM` lets us check that the model focuses on the cell that
 it classifies.
 
 To go further, you can:
 
 - Train for more epochs, or switch to the `224x224` version of BloodMNIST.
-- Try other medicai architectures, which you can list with
+- Try the 2D and 3D architectures of medicai, which you can list with
 `medicai.models.list_models()`.
 - Address the class imbalance, for example by weighting the loss or by
 oversampling the rare classes in the data source.
