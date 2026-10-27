@@ -2136,6 +2136,85 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "muse_glimmer/",
+            "title": "MuseGlimmer",
+            "toc": True,
+            "children": [
+                {
+                    "path": "muse_glimmer_tokenizer",
+                    "title": "MuseGlimmerTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.MuseGlimmerTokenizer",
+                        "keras_hub.tokenizers.MuseGlimmerTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "muse_glimmer_image_converter",
+                    "title": "MuseGlimmerImageConverter",
+                    "generate": [
+                        "keras_hub.layers.MuseGlimmerImageConverter",
+                        "keras_hub.layers.MuseGlimmerImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "muse_glimmer_video_converter",
+                    "title": "MuseGlimmerVideoConverter",
+                    "generate": [
+                        "keras_hub.layers.MuseGlimmerVideoConverter",
+                        "keras_hub.layers.MuseGlimmerVideoConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "muse_glimmer_backbone",
+                    "title": "MuseGlimmerBackbone model",
+                    "generate": [
+                        "keras_hub.models.MuseGlimmerBackbone",
+                        "keras_hub.models.MuseGlimmerBackbone.from_preset",
+                        "keras_hub.models.MuseGlimmerBackbone.token_embedding",
+                        "keras_hub.models.MuseGlimmerBackbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "muse_glimmer_causal_lm",
+                    "title": "MuseGlimmerCausalLM model",
+                    "generate": [
+                        "keras_hub.models.MuseGlimmerCausalLM",
+                        "keras_hub.models.MuseGlimmerCausalLM.from_preset",
+                        "keras_hub.models.MuseGlimmerCausalLM.generate",
+                        "keras_hub.models.MuseGlimmerCausalLM.backbone",
+                        "keras_hub.models.MuseGlimmerCausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "muse_glimmer_assistant_causal_lm",
+                    "title": "MuseGlimmerAssistantCausalLM model",
+                    "generate": [
+                        "keras_hub.models.MuseGlimmerAssistantCausalLM",
+                        "keras_hub.models.MuseGlimmerAssistantCausalLM.from_preset",
+                        "keras_hub.models.MuseGlimmerAssistantCausalLM.backbone",
+                    ],
+                },
+                {
+                    "path": "muse_glimmer_causal_lm_preprocessor",
+                    "title": "MuseGlimmerCausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.MuseGlimmerCausalLMPreprocessor",
+                        "keras_hub.models.MuseGlimmerCausalLMPreprocessor.from_preset",
+                        "keras_hub.models.MuseGlimmerCausalLMPreprocessor.tokenizer",
+                        "keras_hub.models.MuseGlimmerCausalLMPreprocessor.image_converter",
+                        "keras_hub.models.MuseGlimmerCausalLMPreprocessor.video_converter",
+                    ],
+                },
+                {
+                    "path": "muse_glimmer_vision_encoder",
+                    "title": "MuseGlimmerVisionEncoder model",
+                    "generate": [
+                        "keras_hub.models.MuseGlimmerVisionEncoder",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "opt/",
             "title": "OPT",
             "toc": True,
