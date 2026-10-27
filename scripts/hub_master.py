@@ -1091,6 +1091,77 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "embedding_gemma2/",
+            "title": "EmbeddingGemma2",
+            "toc": True,
+            "children": [
+                {
+                    "path": "embedding_gemma2_tokenizer",
+                    "title": "EmbeddingGemma2Tokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.EmbeddingGemma2Tokenizer",
+                        "keras_hub.tokenizers.EmbeddingGemma2Tokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "embedding_gemma2_audio_converter",
+                    "title": "EmbeddingGemma2AudioConverter",
+                    "generate": [
+                        "keras_hub.layers.EmbeddingGemma2AudioConverter",
+                        "keras_hub.layers.EmbeddingGemma2AudioConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "embedding_gemma2_image_converter",
+                    "title": "EmbeddingGemma2ImageConverter",
+                    "generate": [
+                        "keras_hub.layers.EmbeddingGemma2ImageConverter",
+                        "keras_hub.layers.EmbeddingGemma2ImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "embedding_gemma2_video_converter",
+                    "title": "EmbeddingGemma2VideoConverter",
+                    "generate": [
+                        "keras_hub.layers.EmbeddingGemma2VideoConverter",
+                        "keras_hub.layers.EmbeddingGemma2VideoConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "embedding_gemma2_backbone",
+                    "title": "EmbeddingGemma2Backbone model",
+                    "generate": [
+                        "keras_hub.models.EmbeddingGemma2Backbone",
+                        "keras_hub.models.EmbeddingGemma2Backbone.from_preset",
+                        "keras_hub.models.EmbeddingGemma2Backbone.token_embedding",
+                        "keras_hub.models.EmbeddingGemma2Backbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "embedding_gemma2_text_embedder",
+                    "title": "EmbeddingGemma2TextEmbedder model",
+                    "generate": [
+                        "keras_hub.models.EmbeddingGemma2TextEmbedder",
+                        "keras_hub.models.EmbeddingGemma2TextEmbedder.from_preset",
+                        "keras_hub.models.EmbeddingGemma2TextEmbedder.backbone",
+                        "keras_hub.models.EmbeddingGemma2TextEmbedder.preprocessor",
+                    ],
+                },
+                {
+                    "path": "embedding_gemma2_text_embedder_preprocessor",
+                    "title": "EmbeddingGemma2TextEmbedderPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.EmbeddingGemma2TextEmbedderPreprocessor",
+                        "keras_hub.models.EmbeddingGemma2TextEmbedderPreprocessor.from_preset",
+                        "keras_hub.models.EmbeddingGemma2TextEmbedderPreprocessor.tokenizer",
+                        "keras_hub.models.EmbeddingGemma2TextEmbedderPreprocessor.image_converter",
+                        "keras_hub.models.EmbeddingGemma2TextEmbedderPreprocessor.audio_converter",
+                        "keras_hub.models.EmbeddingGemma2TextEmbedderPreprocessor.video_converter",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "esm/",
             "title": "ESM",
             "toc": True,
