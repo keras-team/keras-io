@@ -1,6 +1,6 @@
 """
 Title: Blood cell classification from microscopy images
-Authors: [Maitry](https://github.com/maitry63), [Mohammed Innat](https://www.linkedin.com/in/innat2k14/)
+Authors: [Maitry](https://github.com/maitry63)
 Date created: 2026/10/27
 Last modified: 2026/10/27
 Description: Train a multi-backend blood cell classifier on BloodMNIST with medicai and PyGrain.
@@ -18,7 +18,8 @@ classification.
 
 In this example, we train a convolutional neural network to classify blood cell
 microscopy images into eight cell types, using the BloodMNIST dataset. We rely
-on [medicai](https://github.com/innat/medic-ai), a Keras 3 library for 2D and
+on [Mohammed Innat](https://www.linkedin.com/in/innat2k14/) 's
+[medicai](https://github.com/innat/medic-ai), a Keras 3 library for 2D and
 3D medical image analysis, for the model architecture, the data augmentation,
 and the model explanation. We build the input pipeline with
 [PyGrain](https://github.com/google/grain). Since neither library is tied to a
