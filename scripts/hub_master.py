@@ -3017,6 +3017,77 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "smolvlm2/",
+            "title": "SmolVLM2",
+            "toc": True,
+            "children": [
+                {
+                    "path": "smolvlm2_tokenizer",
+                    "title": "SmolVLM2Tokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.SmolVLM2Tokenizer",
+                        "keras_hub.tokenizers.SmolVLM2Tokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "smolvlm2_image_converter",
+                    "title": "SmolVLM2ImageConverter",
+                    "generate": [
+                        "keras_hub.layers.SmolVLM2ImageConverter",
+                        "keras_hub.layers.SmolVLM2ImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "smolvlm2_video_converter",
+                    "title": "SmolVLM2VideoConverter",
+                    "generate": [
+                        "keras_hub.layers.SmolVLM2VideoConverter",
+                        "keras_hub.layers.SmolVLM2VideoConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "smolvlm2_backbone",
+                    "title": "SmolVLM2Backbone model",
+                    "generate": [
+                        "keras_hub.models.SmolVLM2Backbone",
+                        "keras_hub.models.SmolVLM2Backbone.from_preset",
+                        "keras_hub.models.SmolVLM2Backbone.token_embedding",
+                        "keras_hub.models.SmolVLM2Backbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "smolvlm2_causal_lm",
+                    "title": "SmolVLM2CausalLM model",
+                    "generate": [
+                        "keras_hub.models.SmolVLM2CausalLM",
+                        "keras_hub.models.SmolVLM2CausalLM.from_preset",
+                        "keras_hub.models.SmolVLM2CausalLM.generate",
+                        "keras_hub.models.SmolVLM2CausalLM.backbone",
+                        "keras_hub.models.SmolVLM2CausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "smolvlm2_vision_encoder",
+                    "title": "SmolVLM2VisionEncoder model",
+                    "generate": [
+                        "keras_hub.models.SmolVLM2VisionEncoder",
+                        "keras_hub.models.SmolVLM2VisionEncoder.from_preset",
+                    ],
+                },
+                {
+                    "path": "smolvlm2_causal_lm_preprocessor",
+                    "title": "SmolVLM2CausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.SmolVLM2CausalLMPreprocessor",
+                        "keras_hub.models.SmolVLM2CausalLMPreprocessor.from_preset",
+                        "keras_hub.models.SmolVLM2CausalLMPreprocessor.tokenizer",
+                        "keras_hub.models.SmolVLM2CausalLMPreprocessor.image_converter",
+                        "keras_hub.models.SmolVLM2CausalLMPreprocessor.video_converter",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "stable_diffusion_3/",
             "title": "Stable Diffusion 3",
             "toc": True,
