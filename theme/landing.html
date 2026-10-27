@@ -305,8 +305,8 @@ x = layers.MaxPooling2D(3)(x)
 x = layers.Conv2D(32, 3, activation="relu")(x)
 x = layers.Conv2D(16, 3, activation="relu")(x)
 x = layers.GlobalMaxPooling2D()(x)
-x = layers.Dropout(0.5)
-outputs = layers.Dense(10)
+x = layers.Dropout(0.5)(x)
+outputs = layers.Dense(10)(x)
 
 model = keras.Model(inputs, outputs)
 model.summary()</code></pre>
@@ -469,7 +469,7 @@ history = model.fit(
               <div class="models__card--contanier">
                 <h4 class="models__card--title">MISTRAL</h4>
                 <p class="models__card--description">
-                  A generative language from the French company Mistral AI, making frontier models accessible to all.
+                  Open-weight generative language models from the French company Mistral AI, making frontier models accessible to all.
                 </p>
                 <a class="button__square button__square--white" href="/keras_hub/api/models/mistral/">VIEW DOCUMENTATION</a>
                 <a class="button__square button__square--white" href="https://www.kaggle.com/models/keras/mistral" target="_blank">KAGGLE DETAILS</a>
