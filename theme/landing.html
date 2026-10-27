@@ -6,10 +6,10 @@
       name="viewport"
       content="width=device-width, initial-scale=1, shrink-to-fit=yes"
     />
-    <meta name="description" content="Keras documentation" />
+    <meta name="description" content="Keras is a deep learning library with pluggable backends. Write models once and run them on JAX, PyTorch, TensorFlow, and more, from laptop to TPU." />
     <meta name="author" content="Keras Team" />
 
-    <title>Keras: Deep Learning for humans</title>
+    <title>Keras: The multi-backend deep learning library</title>
     <link rel="icon" type="image/png" href="./img/k-keras-social.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -221,7 +221,7 @@ model = keras.Model(inputs, outputs, name="mini_resnet")
 keras.utils.plot_model(model, "mini_resnet.png")
 model.fit(dataset, epochs=10)</code></pre>
                 <div class="code__container--quickstart">
-                  <a class="button__square--colab" href="https://colab.research.google.com/github/mattdangerw/keras-io/blob/new-landing-and-theme/quickstarts/keras_quickstart.ipynb"
+                  <a class="button__square--colab" href="https://colab.research.google.com/github/keras-team/keras-io/blob/master/quickstarts/keras_quickstart.ipynb"
                     target="_blank">Run quickstart <i class="icon--colab"></i
                   ></a>
                 </div>
@@ -249,7 +249,7 @@ text_to_image = keras_hub.models.TextToImage.from_preset(
 prompt = "Astronaut in a jungle, detailed"
 image_output = text_to_image.generate(prompt)</code></pre>
                 <div class="code__container--quickstart">
-                  <a class="button__square--colab" href="https://colab.research.google.com/github/mattdangerw/keras-io/blob/new-landing-and-theme/quickstarts/keras_hub_quickstart.ipynb"
+                  <a class="button__square--colab" href="https://colab.research.google.com/github/keras-team/keras-io/blob/master/quickstarts/keras_hub_quickstart.ipynb"
                   target="_blank">Run quickstart <i class="icon--colab"></i
                   ></a>
                 </div>
@@ -305,8 +305,8 @@ x = layers.MaxPooling2D(3)(x)
 x = layers.Conv2D(32, 3, activation="relu")(x)
 x = layers.Conv2D(16, 3, activation="relu")(x)
 x = layers.GlobalMaxPooling2D()(x)
-x = layers.Dropout(0.5)
-outputs = layers.Dense(10)
+x = layers.Dropout(0.5)(x)
+outputs = layers.Dense(10)(x)
 
 model = keras.Model(inputs, outputs)
 model.summary()</code></pre>
@@ -469,7 +469,7 @@ history = model.fit(
               <div class="models__card--contanier">
                 <h4 class="models__card--title">MISTRAL</h4>
                 <p class="models__card--description">
-                  A generative language from the French company Mistral AI, making frontier models accessible to all.
+                  Open-weight generative language models from the French company Mistral AI, making frontier models accessible to all.
                 </p>
                 <a class="button__square button__square--white" href="/keras_hub/api/models/mistral/">VIEW DOCUMENTATION</a>
                 <a class="button__square button__square--white" href="https://www.kaggle.com/models/keras/mistral" target="_blank">KAGGLE DETAILS</a>
