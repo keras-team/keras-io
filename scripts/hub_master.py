@@ -1915,6 +1915,67 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "mistral3/",
+            "title": "Mistral3",
+            "toc": True,
+            "children": [
+                {
+                    "path": "mistral3_tokenizer",
+                    "title": "Mistral3Tokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.Mistral3Tokenizer",
+                        "keras_hub.tokenizers.Mistral3Tokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "mistral3_image_converter",
+                    "title": "Mistral3ImageConverter",
+                    "generate": [
+                        "keras_hub.layers.Mistral3ImageConverter",
+                        "keras_hub.layers.Mistral3ImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "mistral3_backbone",
+                    "title": "Mistral3Backbone model",
+                    "generate": [
+                        "keras_hub.models.Mistral3Backbone",
+                        "keras_hub.models.Mistral3Backbone.from_preset",
+                        "keras_hub.models.Mistral3Backbone.token_embedding",
+                        "keras_hub.models.Mistral3Backbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "mistral3_causal_lm",
+                    "title": "Mistral3CausalLM model",
+                    "generate": [
+                        "keras_hub.models.Mistral3CausalLM",
+                        "keras_hub.models.Mistral3CausalLM.from_preset",
+                        "keras_hub.models.Mistral3CausalLM.generate",
+                        "keras_hub.models.Mistral3CausalLM.backbone",
+                        "keras_hub.models.Mistral3CausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "mistral3_causal_lm_preprocessor",
+                    "title": "Mistral3CausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.Mistral3CausalLMPreprocessor",
+                        "keras_hub.models.Mistral3CausalLMPreprocessor.from_preset",
+                        "keras_hub.models.Mistral3CausalLMPreprocessor.tokenizer",
+                        "keras_hub.models.Mistral3CausalLMPreprocessor.image_converter",
+                    ],
+                },
+                {
+                    "path": "mistral3_vision_encoder",
+                    "title": "Mistral3VisionEncoder model",
+                    "generate": [
+                        "keras_hub.models.Mistral3VisionEncoder",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "mit/",
             "title": "MiT",
             "toc": True,
