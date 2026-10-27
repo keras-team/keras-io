@@ -78,14 +78,11 @@ commit to keep the example reproducible. You can install both with:
 pip install grain
 pip install git+https://github.com/innat/medic-ai.git@0e58c4ef54fa439507c1a8918848a2610c4a65ef
 ```
-
-We use the TensorFlow backend, but you can switch to JAX or PyTorch by changing
-the `KERAS_BACKEND` environment variable.
 """
 
 import os
 
-os.environ["KERAS_BACKEND"] = "tensorflow"  # "jax" or "torch".
+os.environ["KERAS_BACKEND"] = "jax"  # "tensorflow" or "torch".
 
 import grain.python as pygrain
 import keras
@@ -271,9 +268,12 @@ Finally, `to_iter_dataset()` reads and transforms the batches in parallel
 background threads.
 
 Keras models consume PyGrain datasets directly in `fit()`, `evaluate()`, and
-`predict()`, with every backend. However, Keras does not know in advance how
-many batches a PyGrain dataset yields, so we compute these numbers ourselves
-and pass them as `steps_per_epoch`, `validation_steps`, and `steps`.
+`predict()`, with every backend. Unlike Python iterators, these datasets start
+again from the first batch every time they are iterated over, so we can reuse
+the validation dataset in every epoch, and the test dataset in several calls.
+However, Keras does not know in advance how many batches a PyGrain dataset
+yields, so we compute these numbers ourselves and pass them as
+`steps_per_epoch`, `validation_steps`, and `steps`.
 """
 
 
