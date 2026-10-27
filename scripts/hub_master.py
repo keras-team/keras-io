@@ -917,6 +917,60 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "diffusion_gemma/",
+            "title": "DiffusionGemma",
+            "toc": True,
+            "children": [
+                {
+                    "path": "diffusion_gemma_tokenizer",
+                    "title": "DiffusionGemmaTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.DiffusionGemmaTokenizer",
+                        "keras_hub.tokenizers.DiffusionGemmaTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "diffusion_gemma_image_converter",
+                    "title": "DiffusionGemmaImageConverter",
+                    "generate": [
+                        "keras_hub.layers.DiffusionGemmaImageConverter",
+                        "keras_hub.layers.DiffusionGemmaImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "diffusion_gemma_backbone",
+                    "title": "DiffusionGemmaBackbone model",
+                    "generate": [
+                        "keras_hub.models.DiffusionGemmaBackbone",
+                        "keras_hub.models.DiffusionGemmaBackbone.from_preset",
+                        "keras_hub.models.DiffusionGemmaBackbone.token_embedding",
+                        "keras_hub.models.DiffusionGemmaBackbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "diffusion_gemma_block_diffusion_lm",
+                    "title": "DiffusionGemmaBlockDiffusionLM model",
+                    "generate": [
+                        "keras_hub.models.DiffusionGemmaBlockDiffusionLM",
+                        "keras_hub.models.DiffusionGemmaBlockDiffusionLM.from_preset",
+                        "keras_hub.models.DiffusionGemmaBlockDiffusionLM.generate",
+                        "keras_hub.models.DiffusionGemmaBlockDiffusionLM.backbone",
+                        "keras_hub.models.DiffusionGemmaBlockDiffusionLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "diffusion_gemma_block_diffusion_lm_preprocessor",
+                    "title": "DiffusionGemmaBlockDiffusionLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.DiffusionGemmaBlockDiffusionLMPreprocessor",
+                        "keras_hub.models.DiffusionGemmaBlockDiffusionLMPreprocessor.from_preset",
+                        "keras_hub.models.DiffusionGemmaBlockDiffusionLMPreprocessor.tokenizer",
+                        "keras_hub.models.DiffusionGemmaBlockDiffusionLMPreprocessor.image_converter",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "dinov2/",
             "title": "DINOV2",
             "toc": True,
