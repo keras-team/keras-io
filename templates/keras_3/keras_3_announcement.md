@@ -38,7 +38,7 @@ TPU training infrastructure. Write one `model.py` using
 Keras 3 APIs, and get access to everything the ML world has to offer.
 - **Leverage large-scale model parallelism & data parallelism with JAX.** Keras 3 includes
 a brand new distribution API, the `keras.distribution` namespace,
-currently implemented for the JAX backend (coming soon to the TensorFlow and PyTorch backends).
+currently implemented for the JAX and PyTorch backends.
 It makes it easy to do model parallelism, data parallelism, and combinations of both —
 at arbitrary model scales and cluster scales.
 Because it keeps the model definition, training logic,
@@ -157,8 +157,8 @@ This makes it easy to quickly specify the same layout for entire categories of v
 
 <img class="irasto" src="https://s3.amazonaws.com/keras.io/img/keras_3/keras_3_model_parallel.jpg" />
 
-The new distribution API is intended to be multi-backend, but is only available for the JAX backend for the time
-being. TensorFlow and PyTorch support is coming soon. Get started with [this guide](/guides/distribution/)!
+The new distribution API is intended to be multi-backend, and is currently available for the JAX and PyTorch
+backends. Get started with [this guide](/guides/distribution/)!
 
 
 ---
@@ -170,16 +170,16 @@ you can start using today with Keras 3.
 
 All 40 Keras Applications models (the `keras.applications` namespace)
 are available in all backends.
-The vast array of pretrained models in [KerasCV](https://keras.io/api/keras_cv/)
-and [KerasHub](https://keras.io/api/keras_hub/) also work with all backends. This includes:
+The vast array of pretrained models in [KerasHub](/keras_hub/)
+also work with all backends. This includes:
 
-- BERT
-- OPT
+- Gemma
+- Llama
+- Qwen
+- Mistral
 - Whisper
-- T5
-- StableDiffusion
-- YOLOv8
-- SegmentAnything
+- Stable Diffusion 3
+- Segment Anything
 - etc.
 
 ---
@@ -306,13 +306,11 @@ You have two possibilities:
 1. If you were accessing `keras` as a standalone package,
 just switch to using the Python package `tf_keras` instead,
 which you can install via `pip install tf_keras`.
-The code and API are wholly unchanged — it's Keras 2.15 with a different package name.
-We will keep fixing bugs in `tf_keras` and we will keep regularly releasing new versions.
-However, no new features or performance improvements will be added,
-since the package is now in maintenance mode.
+The code and API are wholly unchanged — it's legacy Keras 2 with a different package name.
+The package is in maintenance mode:
+no new features or performance improvements will be added.
 2. If you were accessing `keras` via `tf.keras`,
-there are no immediate changes until TensorFlow 2.16.
-TensorFlow 2.16+ will use Keras 3 by default.
+note that TensorFlow 2.16+ uses Keras 3 by default.
 In TensorFlow 2.16+, to keep using Keras 2, you can first install `tf_keras`,
 and then export the environment variable `TF_USE_LEGACY_KERAS=1`.
 This will direct TensorFlow 2.16+ to resolve tf.keras to the locally-installed `tf_keras` package.
@@ -401,7 +399,7 @@ out of 40 Keras Applications vision models, only one was affected.
 ### Q: Does Keras 3 support distributed training?
 
 Data-parallel distribution is supported out of the box in JAX, TensorFlow,
-and PyTorch. Model parallel distribution is supported out of the box for JAX
+and PyTorch. Model parallel distribution is supported out of the box for JAX and PyTorch
 with the `keras.distribution` API.
 
 **With TensorFlow:**
@@ -439,11 +437,6 @@ In JAX, make sure to use the stateless layer API, i.e. `layer.stateless_call()`.
 
 ### Q: Will you add more backends in the future? What about framework XYZ?
 
-We're open to adding new backends as long as the target framework has a large user base
-or otherwise has some unique technical benefits to bring to the table.
-However, adding and maintaining a new backend is a large burden,
-so we're going to carefully consider each new backend candidate on a case by case basis,
-and we're not likely to add many new backends. We will not add any new frameworks
-that aren't yet well-established.
-We are now potentially considering adding a backend written in [Mojo](https://www.modular.com/mojo).
-If that's something you might find useful, please let the Mojo team know.
+Keras backends are pluggable, and more backends may be added over time.
+We consider each new backend candidate on a case by case basis, looking for frameworks
+that are well-established or that bring unique technical benefits to the table.
