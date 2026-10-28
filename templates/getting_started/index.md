@@ -31,21 +31,19 @@ import keras
 print(keras.__version__)
 ```
 
-To use Keras 3, you will also need to install a backend framework -- either JAX, TensorFlow, or PyTorch:
+To use Keras 3, you will also need to install a backend framework, such as JAX, TensorFlow, or PyTorch:
 
 - [Installing JAX](https://jax.readthedocs.io/en/latest/installation.html)
 - [Installing TensorFlow](https://www.tensorflow.org/install)
 - [Installing PyTorch](https://pytorch.org/get-started/locally/)
 
-If you install TensorFlow 2.15, you should reinstall Keras 3 afterwards. The cause is that `tensorflow==2.15` will overwrite your Keras installation with `keras==2.15`.
-This step is not necessary for TensorFlow versions 2.16 onwards as starting in TensorFlow 2.16, it will install Keras 3 by default.
+Still on Keras 2? See [Using Keras 2 (legacy)](/guides/migrating_to_keras_3/#using-keras-2-legacy) in the migration guide.
 
-### Installing KerasCV and KerasHub
+### Installing KerasHub
 
-KerasCV and KerasHub can be installed via pip:
+KerasHub can be installed via pip:
 
 ```
-pip install --upgrade keras-cv
 pip install --upgrade keras-hub
 pip install --upgrade keras
 ```
@@ -56,7 +54,7 @@ pip install --upgrade keras
 
 You can export the environment variable `KERAS_BACKEND`
 or you can edit your local config file at `~/.keras/keras.json` to configure your backend.
-Available backend options are: `"jax"`, `"tensorflow"`, `"torch"`. Example:
+Keras supports multiple pluggable backends; current options include `"jax"`, `"torch"`, and `"tensorflow"`. Example:
 
 ```
 export KERAS_BACKEND="jax"
@@ -83,7 +81,7 @@ they rely on a pre-installed NVIDIA driver and there is no way to update the dri
 #### Universal GPU environment
 
 If you want to attempt to create a "universal environment" where any backend can use the GPU, we recommend following
-[the dependency versions used by Colab](https://colab.sandbox.google.com/drive/13cpd3wCwEHpsmypY9o6XB6rXgBm5oSxu)
+[the dependency versions used by Colab](https://colab.research.google.com/drive/13cpd3wCwEHpsmypY9o6XB6rXgBm5oSxu)
 (which seeks to solve this exact problem). You can install the CUDA driver [from here](https://developer.nvidia.com/cuda-downloads),
 then pip install backends by following their respective CUDA installation instructions:
 [Installing JAX](https://jax.readthedocs.io/en/latest/installation.html),
@@ -112,54 +110,21 @@ pip install --upgrade keras
 ```
 ---
 
-## TensorFlow + Keras 2 backwards compatibility
-
-From TensorFlow 2.0 to TensorFlow 2.15 (included), doing `pip install tensorflow` will also
-install the corresponding version of Keras 2 -- for instance, `pip install tensorflow==2.14.0` will
-install `keras==2.14.0`. That version of Keras is then available via both `import keras` and `from tensorflow import keras`
-(the `tf.keras` namespace).
-
-Starting with TensorFlow 2.16, doing `pip install tensorflow` will install Keras 3. When you have TensorFlow >= 2.16
-and Keras 3, then by default `from tensorflow import keras` (`tf.keras`) will be Keras 3.
-
-Meanwhile, the legacy Keras 2 package is still being released regularly and is available on PyPI as `tf_keras`
-(or equivalently `tf-keras` -- note that `-` and `_` are equivalent in PyPI package names).
-To use it, you can install it via `pip install tf_keras` then import it via `import tf_keras as keras`.
-
-Should you want `tf.keras` to stay on Keras 2 after upgrading to TensorFlow 2.16+, you can configure your TensorFlow installation
-so that `tf.keras` points to `tf_keras`. To achieve this:
-
-1. Make sure to install `tf_keras`. Note that TensorFlow does not install it by default.
-2. Export the environment variable `TF_USE_LEGACY_KERAS=1`.
-
-There are several ways to export the environment variable:
-
-1. You can simply run the shell command `export TF_USE_LEGACY_KERAS=1` before launching the Python interpreter.
-2. You can add `export TF_USE_LEGACY_KERAS=1` to your `.bashrc` file. That way the variable will still be exported when you restart your shell.
-3. You can start your Python script with:
-
-```python
-import os
-os.environ["TF_USE_LEGACY_KERAS"] = "1"
-```
-
-These lines would need to be before any `import tensorflow` statement.
-
----
-
 ## Compatibility matrix
+
+Keras 3 requires Python 3.11 or newer. For the exact backend versions used in Keras CI, see the
+[Keras requirements files](https://github.com/keras-team/keras/blob/master/requirements.txt).
 
 ### JAX compatibility
 
-The following Keras + JAX versions are compatible with each other:
-
-- `jax==0.4.20` & `keras~=3.0`
+- `keras==3.16.0` is tested with the latest `jax` release
+([requirements-jax-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-jax-cuda.txt))
 
 ### TensorFlow compatibility
 
 The following Keras + TensorFlow versions are compatible with each other:
 
-To use Keras 2:
+To use Keras 2 (legacy):
 
 - `tensorflow~=2.13.0` & `keras~=2.13.0`
 - `tensorflow~=2.14.0` & `keras~=2.14.0`
@@ -167,10 +132,10 @@ To use Keras 2:
 
 To use Keras 3:
 
-- `tensorflow~=2.16.1` & `keras~=3.0`
+- `keras==3.16.0` is tested with `tensorflow==2.20.0`
+([requirements-tensorflow-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-tensorflow-cuda.txt))
 
 ### PyTorch compatibility
 
-The following Keras + PyTorch versions are compatible with each other:
-
-- `torch~=2.1.0` & `keras~=3.0`
+- `keras==3.16.0` is tested with the latest `torch` release
+([requirements-torch-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt))
