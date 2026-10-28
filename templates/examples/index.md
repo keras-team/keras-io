@@ -5,6 +5,8 @@ Our code examples are short (less than 300 lines of code), focused demonstration
 All of our examples are written as Jupyter notebooks and can be run in one click in [Google Colab](https://colab.research.google.com/notebooks/welcome.ipynb),
 a hosted notebook environment that requires no setup and runs in the cloud. Google Colab includes GPU and TPU runtimes.
 
+Looking for recommender systems? See the [KerasRS examples](/keras_rs/examples/).
+
 
 {{examples_list}}
 
