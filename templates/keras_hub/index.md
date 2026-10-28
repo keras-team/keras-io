@@ -6,8 +6,8 @@
 and fast. The library provides [Keras 3](https://keras.io/keras_3/)
 implementations of popular model architectures, paired with a collection of
 pretrained checkpoints available on [Kaggle Models](https://kaggle.com/models/).
-Models can be used for both training and inference, on any of the TensorFlow,
-Jax, and Torch backends.
+Models can be used for both training and inference, on JAX, PyTorch, TensorFlow,
+and other supported backends.
 
 KerasHub is an extension of the core Keras API; KerasHub components are provided
 as `keras.layers.Layer` and `keras.Model` implementations. If you are familiar
@@ -63,10 +63,43 @@ Import KerasHub and other libraries:
 import keras
 import keras_hub
 import numpy as np
-import tensorflow_datasets as tfds
 ```
 
-Load a resnet model and use it to predict a label for an image:
+Load a Gemma 4 model and generate text:
+
+```python
+causal_lm = keras_hub.models.CausalLM.from_preset(
+    "gemma4_instruct_2b",
+    dtype="bfloat16",
+)
+prompt = """<|turn>user
+Write python code to print the first 100 primes.<turn|>
+<|turn>model
+"""
+print(causal_lm.generate(prompt, max_length=512))
+```
+
+Quantize the weights to int8 to reduce memory use:
+
+```python
+causal_lm.quantize("int8")
+```
+
+Fine-tune with LoRA, which freezes the backbone and trains small low-rank
+adapter weights:
+
+```python
+causal_lm.backbone.enable_lora(rank=4)
+causal_lm.fit(
+    {
+        "prompts": ["<|turn>user\nWhat is Keras?<turn|>\n<|turn>model\n"],
+        "responses": ["Keras is a multi-backend deep learning framework."],
+    },
+    batch_size=1,
+)
+```
+
+Load a ResNet model and use it to predict a label for an image:
 
 ```python
 classifier = keras_hub.models.ImageClassifier.from_preset(
@@ -78,25 +111,6 @@ path = keras.utils.get_file(origin=url)
 image = keras.utils.load_img(path)
 preds = classifier.predict(np.array([image]))
 print(keras_hub.utils.decode_imagenet_predictions(preds))
-```
-
-Load a Bert model and fine-tune it on IMDb movie reviews:
-
-```python
-classifier = keras_hub.models.BertClassifier.from_preset(
-    "bert_base_en_uncased",
-    activation="softmax",
-    num_classes=2,
-)
-imdb_train, imdb_test = tfds.load(
-    "imdb_reviews",
-    split=["train", "test"],
-    as_supervised=True,
-    batch_size=16,
-)
-classifier.fit(imdb_train, validation_data=imdb_test)
-preds = classifier.predict(["What an amazing movie!", "A total waste of time."])
-print(preds)
 ```
 
 ---
