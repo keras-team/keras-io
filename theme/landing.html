@@ -56,29 +56,6 @@
         f.parentNode.insertBefore(j, f);
       })(window, document, "script", "dataLayer", "GTM-5DNGF4N");
     </script>
-    <script>
-      (function (i, s, o, g, r, a, m) {
-        i["GoogleAnalyticsObject"] = r;
-        (i[r] =
-          i[r] ||
-          function () {
-            (i[r].q = i[r].q || []).push(arguments);
-          }),
-          (i[r].l = 1 * new Date());
-        (a = s.createElement(o)), (m = s.getElementsByTagName(o)[0]);
-        a.async = 1;
-        a.src = g;
-        m.parentNode.insertBefore(a, m);
-      })(
-        window,
-        document,
-        "script",
-        "https://www.google-analytics.com/analytics.js",
-        "ga"
-      );
-      ga("create", "UA-175165319-128", "auto");
-      ga("send", "pageview");
-    </script>
     <!-- End Google Tag Manager -->
   </head>
 
@@ -658,21 +635,6 @@ history = model.fit(
     <script src="./js/index.js"></script>
 
     <script src="./js/glide.min.js"></script>
-
-    <script>
-      function adjustNavMargin() {
-        const banner = document.querySelector('.survey__banner');
-        const nav = document.querySelector('.nav__container');
-
-        if (banner && nav) {
-          const bannerHeight = banner.offsetHeight;
-          nav.style.marginTop = bannerHeight + 'px';
-        }
-      }
-
-      document.addEventListener('DOMContentLoaded', adjustNavMargin);
-      window.addEventListener('resize', adjustNavMargin);
-    </script>
 
     <script>
       const carousels = document.querySelector(".glide");
