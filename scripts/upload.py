@@ -1,4 +1,5 @@
 import boto3
+import botocore.exceptions
 from pathlib import Path
 import mimetypes
 import hashlib
@@ -32,16 +33,14 @@ def upload_file(bucket, fpath, key_name, redirect=None):
     extra_args = {"ContentType": mime, "ACL": "public-read"}
     if redirect:
         extra_args["WebsiteRedirectLocation"] = redirect
-    s3.upload_file(
-        fpath, bucket, key_name, ExtraArgs={"ContentType": mime, "ACL": "public-read"}
-    )
+    s3.upload_file(fpath, bucket, key_name, ExtraArgs=extra_args)
 
 
 def load_hash_cache():
     try:
         s3.download_file(BUCKET, HASH_CACHE, HASH_CACHE)
-    except:
-        print(f"[ERROR] Could not dowload hash cache {HASH_CACHE}")
+    except botocore.exceptions.ClientError:
+        print(f"[ERROR] Could not download hash cache {HASH_CACHE}")
         return {}
     with open(HASH_CACHE) as f:
         contents = f.read()
