@@ -31,7 +31,7 @@ import keras
 print(keras.__version__)
 ```
 
-To use Keras 3, you will also need to install a backend framework -- either JAX, TensorFlow, or PyTorch:
+To use Keras 3, you will also need to install a backend framework, such as JAX, TensorFlow, or PyTorch:
 
 - [Installing JAX](https://jax.readthedocs.io/en/latest/installation.html)
 - [Installing TensorFlow](https://www.tensorflow.org/install)
@@ -40,12 +40,11 @@ To use Keras 3, you will also need to install a backend framework -- either JAX,
 If you install TensorFlow 2.15, you should reinstall Keras 3 afterwards. The cause is that `tensorflow==2.15` will overwrite your Keras installation with `keras==2.15`.
 This step is not necessary for TensorFlow versions 2.16 onwards as starting in TensorFlow 2.16, it will install Keras 3 by default.
 
-### Installing KerasCV and KerasHub
+### Installing KerasHub
 
-KerasCV and KerasHub can be installed via pip:
+KerasHub can be installed via pip:
 
 ```
-pip install --upgrade keras-cv
 pip install --upgrade keras-hub
 pip install --upgrade keras
 ```
@@ -56,7 +55,7 @@ pip install --upgrade keras
 
 You can export the environment variable `KERAS_BACKEND`
 or you can edit your local config file at `~/.keras/keras.json` to configure your backend.
-Available backend options are: `"jax"`, `"tensorflow"`, `"torch"`. Example:
+Keras supports multiple pluggable backends; current options include `"jax"`, `"torch"`, and `"tensorflow"`. Example:
 
 ```
 export KERAS_BACKEND="jax"
@@ -83,7 +82,7 @@ they rely on a pre-installed NVIDIA driver and there is no way to update the dri
 #### Universal GPU environment
 
 If you want to attempt to create a "universal environment" where any backend can use the GPU, we recommend following
-[the dependency versions used by Colab](https://colab.sandbox.google.com/drive/13cpd3wCwEHpsmypY9o6XB6rXgBm5oSxu)
+[the dependency versions used by Colab](https://colab.research.google.com/drive/13cpd3wCwEHpsmypY9o6XB6rXgBm5oSxu)
 (which seeks to solve this exact problem). You can install the CUDA driver [from here](https://developer.nvidia.com/cuda-downloads),
 then pip install backends by following their respective CUDA installation instructions:
 [Installing JAX](https://jax.readthedocs.io/en/latest/installation.html),
@@ -149,17 +148,19 @@ These lines would need to be before any `import tensorflow` statement.
 
 ## Compatibility matrix
 
+Keras 3 requires Python 3.11 or newer. For the exact backend versions used in Keras CI, see the
+[Keras requirements files](https://github.com/keras-team/keras/blob/master/requirements.txt).
+
 ### JAX compatibility
 
-The following Keras + JAX versions are compatible with each other:
-
-- `jax==0.4.20` & `keras~=3.0`
+- `keras==3.16.0` is tested with the latest `jax` release
+([requirements-jax-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-jax-cuda.txt))
 
 ### TensorFlow compatibility
 
 The following Keras + TensorFlow versions are compatible with each other:
 
-To use Keras 2:
+To use Keras 2 (legacy):
 
 - `tensorflow~=2.13.0` & `keras~=2.13.0`
 - `tensorflow~=2.14.0` & `keras~=2.14.0`
@@ -167,10 +168,10 @@ To use Keras 2:
 
 To use Keras 3:
 
-- `tensorflow~=2.16.1` & `keras~=3.0`
+- `keras==3.16.0` is tested with `tensorflow==2.20.0`
+([requirements-tensorflow-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-tensorflow-cuda.txt))
 
 ### PyTorch compatibility
 
-The following Keras + PyTorch versions are compatible with each other:
-
-- `torch~=2.1.0` & `keras~=3.0`
+- `keras==3.16.0` is tested with the latest `torch` release
+([requirements-torch-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt))
