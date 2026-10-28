@@ -112,7 +112,7 @@ print(generator_in_channels, discriminator_in_channels)
 ## Creating the discriminator and generator
 
 The model definitions (`discriminator`, `generator`, and `ConditionalGAN`) have been
-adapted from [this example](https://keras.io/guides/customizing_what_happens_in_fit/).
+adapted from [this example](https://keras.io/guides/custom_train_step_in_tensorflow/).
 """
 
 # Create the discriminator.

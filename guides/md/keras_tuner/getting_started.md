@@ -1513,7 +1513,7 @@ tutorial](https://keras.io/api/metrics/#creating-custom-metrics). If you would
 like a metric with a different function signature than `update_state(y_true,
 y_pred, sample_weight)`, you can override the `train_step()` method of your
 model following [this
-tutorial](https://keras.io/guides/customizing_what_happens_in_fit/#going-lowerlevel).
+tutorial](https://keras.io/guides/custom_train_step_in_jax/#going-lowerlevel).
 
 
 ```python
