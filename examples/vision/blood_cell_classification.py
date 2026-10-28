@@ -2,7 +2,7 @@
 Title: Blood cell classification from microscopy images
 Authors: [Maitry](https://github.com/maitry63)
 Date created: 2026/10/27
-Last modified: 2026/10/27
+Last modified: 2026/10/28
 Description: Train a multi-backend blood cell classifier on BloodMNIST with medicai and PyGrain.
 Accelerator: GPU
 """
@@ -80,7 +80,7 @@ pip install git+https://github.com/innat/medic-ai.git@0e58c4ef54fa439507c1a89188
 
 import os
 
-os.environ["KERAS_BACKEND"] = "jax"  # "tensorflow" or "torch".
+os.environ["KERAS_BACKEND"] =  "tensorflow"  # "jax" or "torch".
 
 import grain.python as pygrain
 import keras
@@ -96,7 +96,7 @@ keras.mixed_precision.set_global_policy("mixed_float16")
 
 image_size = 128
 batch_size = 64
-epochs = 10
+epochs = 3
 class_names = [
     "basophil",
     "eosinophil",
@@ -146,12 +146,20 @@ indices. Let's look at one training image from each class.
 """
 
 plt.figure(figsize=(16, 3))
-for class_index, class_name in enumerate(class_names):
+
+available_classes = [
+    class_index
+    for class_index in range(num_classes)
+    if np.any(y_train == class_index)
+]
+
+for plot_index, class_index in enumerate(available_classes):
     sample_index = np.flatnonzero(y_train == class_index)[0]
-    plt.subplot(1, num_classes, class_index + 1)
+    plt.subplot(1, len(available_classes), plot_index + 1)
     plt.imshow(x_train[sample_index])
-    plt.title(class_name, fontsize=10)
+    plt.title(class_names[class_index], fontsize=10)
     plt.axis("off")
+
 plt.tight_layout()
 plt.show()
 
@@ -396,31 +404,73 @@ Overall accuracy can hide weaknesses on the less frequent classes, so we also
 compute the confusion matrix, along with the precision and recall of each
 class.
 """
-
 predictions = model.predict(test_dataset, steps=test_steps, verbose=0).argmax(axis=-1)
-confusion = np.zeros((num_classes, num_classes), dtype="int64")
-np.add.at(confusion, (y_test, predictions), 1)
-precision = confusion.diagonal() / np.maximum(confusion.sum(axis=0), 1)
-recall = confusion.diagonal() / confusion.sum(axis=1)
-for class_name, class_precision, class_recall in zip(class_names, precision, recall):
-    print(
-        f"{class_name:>21}: precision={class_precision:.3f}, recall={class_recall:.3f}"
+
+# Ensure predictions and test labels correspond one-to-one.
+if len(predictions) != len(y_test):
+    raise ValueError(
+        f"Prediction count ({len(predictions)}) does not match "
+        f"test label count ({len(y_test)})."
     )
 
-normalized_confusion = confusion / confusion.sum(axis=1, keepdims=True)
-plt.figure(figsize=(8, 7))
+# Build the confusion matrix.
+confusion = np.zeros((num_classes, num_classes), dtype="int64")
+np.add.at(confusion, (y_test, predictions), 1)
+
+# Compute precision and recall safely.
+true_positives = confusion.diagonal()
+predicted_counts = confusion.sum(axis=0)
+actual_counts = confusion.sum(axis=1)
+
+precision = true_positives / np.maximum(predicted_counts, 1)
+recall = true_positives / np.maximum(actual_counts, 1)
+
+print("\nPer-class evaluation metrics:")
+for class_index, class_name in enumerate(class_names):
+    if actual_counts[class_index] == 0:
+        print(
+            f"{class_name:>21}: "
+            "precision="
+            f"{precision[class_index]:.3f}, "
+            "recall=N/A (no test samples)"
+        )
+    else:
+        print(
+            f"{class_name:>21}: "
+            f"precision={precision[class_index]:.3f}, "
+            f"recall={recall[class_index]:.3f}"
+        )
+
+# Normalize each row safely.
+normalized_confusion = confusion / np.maximum(
+    confusion.sum(axis=1, keepdims=True), 1
+)
+
+plt.figure(figsize=(10, 8))
 plt.imshow(normalized_confusion, cmap="Blues", vmin=0.0, vmax=1.0)
+
 for true_index in range(num_classes):
     for predicted_index in range(num_classes):
         value = normalized_confusion[true_index, predicted_index]
         color = "white" if value > 0.5 else "black"
-        plt.text(predicted_index, true_index, f"{value:.2f}", ha="center", color=color)
+
+        plt.text(
+            predicted_index,
+            true_index,
+            f"{value:.2f}",
+            ha="center",
+            va="center",
+            color=color,
+        )
+
 plt.xticks(range(num_classes), class_names, rotation=45, ha="right")
 plt.yticks(range(num_classes), class_names)
 plt.xlabel("Predicted class")
 plt.ylabel("True class")
+plt.title("Normalized confusion matrix")
 plt.tight_layout()
 plt.show()
+
 
 """
 ## Explain predictions with Grad-CAM
