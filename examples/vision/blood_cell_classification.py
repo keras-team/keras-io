@@ -80,7 +80,7 @@ pip install git+https://github.com/innat/medic-ai.git@0e58c4ef54fa439507c1a89188
 
 import os
 
-os.environ["KERAS_BACKEND"] =  "tensorflow"  # "jax" or "torch".
+os.environ["KERAS_BACKEND"] = "jax"  # "tensorflow" or "torch".
 
 import grain.python as pygrain
 import keras
@@ -96,7 +96,7 @@ keras.mixed_precision.set_global_policy("mixed_float16")
 
 image_size = 128
 batch_size = 64
-epochs = 3
+epochs = 10
 class_names = [
     "basophil",
     "eosinophil",
@@ -148,9 +148,7 @@ indices. Let's look at one training image from each class.
 plt.figure(figsize=(16, 3))
 
 available_classes = [
-    class_index
-    for class_index in range(num_classes)
-    if np.any(y_train == class_index)
+    class_index for class_index in range(num_classes) if np.any(y_train == class_index)
 ]
 
 for plot_index, class_index in enumerate(available_classes):
@@ -220,7 +218,7 @@ We create and run the pipeline on the CPU, inside the PyGrain worker threads,
 which leaves the accelerator free for the model.
 """
 
-with keras.device("cpu:0"):
+with keras.device("cpu"):
     train_augmentation = medicai.transforms.Compose(
         [
             medicai.transforms.RandomFlip(
@@ -258,7 +256,7 @@ with keras.device("cpu:0"):
 
 def augment_batch(batch):
     images, labels = batch
-    with keras.device("cpu:0"):
+    with keras.device("cpu"):
         images = train_augmentation({"image": images})["image"]
     return ops.convert_to_numpy(images), labels
 
@@ -442,9 +440,7 @@ for class_index, class_name in enumerate(class_names):
         )
 
 # Normalize each row safely.
-normalized_confusion = confusion / np.maximum(
-    confusion.sum(axis=1, keepdims=True), 1
-)
+normalized_confusion = confusion / np.maximum(confusion.sum(axis=1, keepdims=True), 1)
 
 plt.figure(figsize=(10, 8))
 plt.imshow(normalized_confusion, cmap="Blues", vmin=0.0, vmax=1.0)
