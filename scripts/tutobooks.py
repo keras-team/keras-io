@@ -175,6 +175,10 @@ def py_to_nb(py_path, nb_path, fill_outputs=False):
         notebook[key] = copy.deepcopy(NB_BASE[key])
     notebook["metadata"]["colab"]["name"] = str(py_path).split("/")[-1][:-3]
     notebook["metadata"]["accelerator"] = attributes["accelerator"]
+    if attributes["accelerator"] == "TPU":
+        # Set to the current free tier TPU type.
+        # A missing value defaults to "V28", which is no longer available.
+        notebook["metadata"]["colab"]["gpuType"] = "V5E1"
     notebook["cells"] = cells
     if loc > MAX_LOC:
         raise ValueError(
