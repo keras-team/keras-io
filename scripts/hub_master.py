@@ -2136,6 +2136,49 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "mpnet/",
+            "title": "MPNet",
+            "toc": True,
+            "children": [
+                {
+                    "path": "mpnet_tokenizer",
+                    "title": "MPNetTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.MPNetTokenizer",
+                        "keras_hub.tokenizers.MPNetTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "mpnet_backbone",
+                    "title": "MPNetBackbone model",
+                    "generate": [
+                        "keras_hub.models.MPNetBackbone",
+                        "keras_hub.models.MPNetBackbone.from_preset",
+                        "keras_hub.models.MPNetBackbone.token_embedding",
+                    ],
+                },
+                {
+                    "path": "mpnet_text_embedder",
+                    "title": "MPNetTextEmbedder model",
+                    "generate": [
+                        "keras_hub.models.MPNetTextEmbedder",
+                        "keras_hub.models.MPNetTextEmbedder.from_preset",
+                        "keras_hub.models.MPNetTextEmbedder.backbone",
+                        "keras_hub.models.MPNetTextEmbedder.preprocessor",
+                    ],
+                },
+                {
+                    "path": "mpnet_text_embedder_preprocessor",
+                    "title": "MPNetTextEmbedderPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.MPNetTextEmbedderPreprocessor",
+                        "keras_hub.models.MPNetTextEmbedderPreprocessor.from_preset",
+                        "keras_hub.models.MPNetTextEmbedderPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "opt/",
             "title": "OPT",
             "toc": True,
