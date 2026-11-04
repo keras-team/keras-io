@@ -153,7 +153,7 @@ Keras 3 requires Python 3.11 or newer. For the exact backend versions used in Ke
 
 ### JAX compatibility
 
-- `keras==3.16.0` is tested with the latest `jax` release
+- `keras==3.15.1` is tested with the latest `jax` release
 ([requirements-jax-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-jax-cuda.txt))
 
 ### TensorFlow compatibility
@@ -168,10 +168,10 @@ To use Keras 2 (legacy):
 
 To use Keras 3:
 
-- `keras==3.16.0` is tested with `tensorflow==2.20.0`
+- `keras==3.15.1` is tested with `tensorflow==2.20.0`
 ([requirements-tensorflow-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-tensorflow-cuda.txt))
 
 ### PyTorch compatibility
 
-- `keras==3.16.0` is tested with the latest `torch` release
+- `keras==3.15.1` is tested with the latest `torch` release
 ([requirements-torch-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt))
