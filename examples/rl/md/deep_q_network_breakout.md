@@ -2,7 +2,7 @@
 
 **Author:** [Jacob Chapman](https://twitter.com/jacoblchapman) and [Mathias Lechner](https://twitter.com/MLech20)<br>
 **Date created:** 2020/05/23<br>
-**Last modified:** 2024/03/16<br>
+**Last modified:** 2026/06/26<br>
 **Description:** Play Atari Breakout with a Deep Q-Network.
 
 
@@ -61,13 +61,15 @@ os.environ["KERAS_BACKEND"] = "tensorflow"
 import keras
 from keras import layers
 
+import ale_py
 import gymnasium as gym
-from gymnasium.wrappers import AtariPreprocessing, FrameStack
+
+gym.register_envs(ale_py)
+from gymnasium.wrappers import AtariPreprocessing, FrameStackObservation
 import numpy as np
 import tensorflow as tf
 
 # Configuration parameters for the whole setup
-seed = 42
 gamma = 0.99  # Discount factor for past rewards
 epsilon = 1.0  # Epsilon greedy parameter
 epsilon_min = 0.1  # Minimum epsilon greedy parameter
@@ -85,47 +87,16 @@ env = gym.make("BreakoutNoFrameskip-v4")  # , render_mode="human")
 # Environment preprocessing
 env = AtariPreprocessing(env)
 # Stack four frames
-env = FrameStack(env, 4)
-env.seed(seed)
+env = FrameStackObservation(env, 4)
 ```
 
 <div class="k-default-codeblock">
 ```
-A.L.E: Arcade Learning Environment (version 0.8.1+unknown)
+A.L.E: Arcade Learning Environment (version 0.12.0+0706845)
 [Powered by Stella]
-Game console created:
-  ROM file:  /Users/luca/mambaforge/envs/keras-io/lib/python3.9/site-packages/AutoROM/roms/breakout.bin
-  Cart Name: Breakout - Breakaway IV (1978) (Atari)
-  Cart MD5:  f34f08e5eb96e500e851a80be3277a56
-  Display Format:  AUTO-DETECT ==> NTSC
-  ROM Size:        2048
-  Bankswitch Type: AUTO-DETECT ==> 2K
 ```
 </div>
-    
-<div class="k-default-codeblock">
-```
-Running ROM file...
-Random seed is -975249067
-Game console created:
-  ROM file:  /Users/luca/mambaforge/envs/keras-io/lib/python3.9/site-packages/AutoROM/roms/breakout.bin
-  Cart Name: Breakout - Breakaway IV (1978) (Atari)
-  Cart MD5:  f34f08e5eb96e500e851a80be3277a56
-  Display Format:  AUTO-DETECT ==> NTSC
-  ROM Size:        2048
-  Bankswitch Type: AUTO-DETECT ==> 2K
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Running ROM file...
-Random seed is -1625411987
 
-(3444837047, 2669555309)
-
-```
-</div>
 ---
 ## Implement the Deep Q-Network
 
@@ -143,13 +114,13 @@ def create_q_model():
     # Network defined by the Deepmind paper
     return keras.Sequential(
         [
+            keras.Input(shape=(4, 84, 84)),
             layers.Lambda(
                 lambda tensor: keras.ops.transpose(tensor, [0, 2, 3, 1]),
                 output_shape=(84, 84, 4),
-                input_shape=(4, 84, 84),
             ),
             # Convolutions on the frames on the screen
-            layers.Conv2D(32, 8, strides=4, activation="relu", input_shape=(4, 84, 84)),
+            layers.Conv2D(32, 8, strides=4, activation="relu"),
             layers.Conv2D(64, 4, strides=2, activation="relu"),
             layers.Conv2D(64, 3, strides=1, activation="relu"),
             layers.Flatten(),
@@ -177,7 +148,6 @@ model_target = create_q_model()
 # In the Deepmind paper they use RMSProp however then Adam optimizer
 # improves training time
 optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
-
 # Experience replay buffers
 action_history = []
 state_history = []
@@ -228,8 +198,9 @@ while True:
         epsilon = max(epsilon, epsilon_min)
 
         # Apply the sampled action in our environment
-        state_next, reward, done, _, _ = env.step(action)
-        state_next = np.array(state_next)
+        state_next, reward, terminated, truncated, info = env.step(action)
+        done = terminated or truncated
+        state_next = np.asarray(state_next, dtype=np.uint8)
 
         episode_reward += reward
 
@@ -257,7 +228,7 @@ while True:
 
             # Build the updated Q-values for the sampled future states
             # Use the target model for stability
-            future_rewards = model_target.predict(state_next_sample)
+            future_rewards = model_target(state_next_sample, training=False)
             # Q value = reward + discount factor * expected future reward
             updated_q_values = rewards_sample + gamma * keras.ops.amax(
                 future_rewards, axis=1
@@ -271,7 +242,7 @@ while True:
 
             with tf.GradientTape() as tape:
                 # Train the model on the states and updated Q-values
-                q_values = model(state_sample)
+                q_values = model(state_sample, training=True)
 
                 # Apply the masks to the Q-values to get the Q-value for action taken
                 q_action = keras.ops.sum(keras.ops.multiply(q_values, masks), axis=1)
@@ -318,6 +289,12 @@ while True:
         print("Stopped at episode {}!".format(episode_count))
         break
 ```
+
+<div class="k-default-codeblock">
+```
+Stopped at episode 10!
+```
+</div>
 
 ---
 ## Visualizations
