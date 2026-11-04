@@ -59,23 +59,29 @@ def wrapped_upload_file(args):
     upload_file(bucket, fpath, key_name)
 
 
-def cleanup(site_directory, redirect_directory):
+def list_bucket_keys():
+    """Return the set of every object key currently in the bucket."""
+    keys = set()
     paginator = s3.get_paginator("list_objects_v2")
-    page_iterator = paginator.paginate(Bucket=BUCKET)
-    for page in page_iterator:
-        for obj in page["Contents"]:
-            key = obj["Key"]
-            if key.endswith(".html"):
-                site_fpath = os.path.join(site_directory, key)
-                redirect_fpath = os.path.join(redirect_directory, key)
-                if not os.path.exists(site_fpath) and not os.path.exists(
-                    redirect_fpath
-                ):
-                    print(f"[DELETE] {key}")
-                    s3.delete_object(Bucket=BUCKET, Key=key)
+    for page in paginator.paginate(Bucket=BUCKET):
+        for obj in page.get("Contents", []):
+            keys.add(obj["Key"])
+    return keys
 
 
-def upload_dir(directory, include_img=True, hash_cache=None):
+def cleanup(site_directory, redirect_directory, existing_keys):
+    for key in existing_keys:
+        if key.endswith(".html"):
+            site_fpath = os.path.join(site_directory, key)
+            redirect_fpath = os.path.join(redirect_directory, key)
+            if not os.path.exists(site_fpath) and not os.path.exists(
+                redirect_fpath
+            ):
+                print(f"[DELETE] {key}")
+                s3.delete_object(Bucket=BUCKET, Key=key)
+
+
+def upload_dir(directory, include_img=True, hash_cache=None, existing_keys=None):
     print(f"Uploading files from '{directory}'...")
     all_targets = []
     for dp, _, fn in os.walk(directory):
@@ -97,7 +103,10 @@ def upload_dir(directory, include_img=True, hash_cache=None):
         for bucket, fpath, key_name in all_targets:
             new_hash = hash_file(fpath)
             old_hash = hash_cache.get(key_name)
-            if new_hash != old_hash:
+            # Only trust the cache if the object is actually in the bucket;
+            # a stale cache entry must never hide a missing file.
+            in_bucket = existing_keys is None or key_name in existing_keys
+            if new_hash != old_hash or not in_bucket:
                 filtered_targets.append((bucket, fpath, key_name))
             new_hash_cache[key_name] = new_hash
         all_targets = filtered_targets
@@ -133,9 +142,12 @@ def upload_redirects(directory):
 if __name__ == "__main__":
     root = Path(__file__).parent.parent.resolve()
     hash_cache = load_hash_cache()
+    existing_keys = list_bucket_keys()
     site_directory = os.path.join(root, "site")
     redirect_directory = os.path.join(root, "redirects")
-    hash_cache = upload_dir(site_directory, hash_cache=hash_cache)
+    hash_cache = upload_dir(
+        site_directory, hash_cache=hash_cache, existing_keys=existing_keys
+    )
     upload_redirects(redirect_directory)
-    cleanup(site_directory, redirect_directory)
+    cleanup(site_directory, redirect_directory, existing_keys)
     save_hash_cache(hash_cache)

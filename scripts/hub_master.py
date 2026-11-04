@@ -2329,6 +2329,25 @@ MODELS_MASTER = {
                         "keras_hub.models.ModernBertMaskedLMPreprocessor.tokenizer",
                     ],
                 },
+                {
+                    "path": "modern_bert_text_embedder",
+                    "title": "ModernBertTextEmbedder model",
+                    "generate": [
+                        "keras_hub.models.ModernBertTextEmbedder",
+                        "keras_hub.models.ModernBertTextEmbedder.from_preset",
+                        "keras_hub.models.ModernBertTextEmbedder.backbone",
+                        "keras_hub.models.ModernBertTextEmbedder.preprocessor",
+                    ],
+                },
+                {
+                    "path": "modern_bert_text_embedder_preprocessor",
+                    "title": "ModernBertTextEmbedderPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.ModernBertTextEmbedderPreprocessor",
+                        "keras_hub.models.ModernBertTextEmbedderPreprocessor.from_preset",
+                        "keras_hub.models.ModernBertTextEmbedderPreprocessor.tokenizer",
+                    ],
+                },
             ],
         },
         {
