@@ -492,7 +492,7 @@ EXAMPLES_MASTER = {
                     "path": "supervised-contrastive-learning",
                     "title": "Supervised Contrastive Learning",
                     "subcategory": "Performance recipes",
-                    "keras_2": True,
+                    "keras_3": True,
                 },
             ],
         },
@@ -1120,13 +1120,14 @@ EXAMPLES_MASTER = {
             "title": "Quick Keras Recipes",
             "toc": True,
             "children": [
-                # Keras usage tips
+                # Generative AI with KerasHub
                 {
                     "path": "parameter_efficient_finetuning_of_gemma_with_lora_and_qlora",
                     "title": "Parameter-efficient fine-tuning of Gemma with LoRA and QLoRA",
-                    "subcategory": "Keras usage tips",
+                    "subcategory": "Generative AI with KerasHub",
                     "keras_3": True,
                 },
+                # Keras usage tips
                 {
                     "path": "float8_training_and_inference_with_transformer",
                     "title": "Float8 training and inference with a simple Transformer model",
