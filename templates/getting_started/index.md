@@ -31,11 +31,12 @@ import keras
 print(keras.__version__)
 ```
 
-To use Keras 3, you will also need to install a backend framework, such as JAX, TensorFlow, or PyTorch:
+To use Keras 3, you will also need to install a backend framework, such as JAX, PyTorch, or MLX:
 
 - [Installing JAX](https://jax.readthedocs.io/en/latest/installation.html)
 - [Installing TensorFlow](https://www.tensorflow.org/install)
 - [Installing PyTorch](https://pytorch.org/get-started/locally/)
+- [Installing MLX](https://ml-explore.github.io/mlx/build/html/install.html)
 
 If you install TensorFlow 2.15, you should reinstall Keras 3 afterwards. The cause is that `tensorflow==2.15` will overwrite your Keras installation with `keras==2.15`.
 This step is not necessary for TensorFlow versions 2.16 onwards as starting in TensorFlow 2.16, it will install Keras 3 by default.
@@ -148,17 +149,21 @@ These lines would need to be before any `import tensorflow` statement.
 
 ## Compatibility matrix
 
-Keras 3 requires Python 3.11 or newer. For the exact backend versions used in Keras CI, see the
-[Keras requirements files](https://github.com/keras-team/keras/blob/master/requirements.txt).
+Keras 3 requires Python 3.11 or newer.
 
 ### JAX compatibility
 
-- `keras==3.15.1` is tested with the latest `jax` release
-([requirements-jax-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-jax-cuda.txt))
+The following Keras + JAX versions are compatible with each other:
+
+- `keras==3.15.1` & the latest `jax` release
 
 ### TensorFlow compatibility
 
 The following Keras + TensorFlow versions are compatible with each other:
+
+To use Keras 3:
+
+- `keras==3.15.1` & `tensorflow==2.20.0`
 
 To use Keras 2 (legacy):
 
@@ -166,12 +171,8 @@ To use Keras 2 (legacy):
 - `tensorflow~=2.14.0` & `keras~=2.14.0`
 - `tensorflow~=2.15.0` & `keras~=2.15.0`
 
-To use Keras 3:
-
-- `keras==3.15.1` is tested with `tensorflow==2.20.0`
-([requirements-tensorflow-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-tensorflow-cuda.txt))
-
 ### PyTorch compatibility
 
-- `keras==3.15.1` is tested with the latest `torch` release
-([requirements-torch-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt))
+The following Keras + PyTorch versions are compatible with each other:
+
+- `keras==3.15.1` & the latest `torch` release
