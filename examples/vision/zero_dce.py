@@ -249,16 +249,24 @@ preserving the contrast between neighboring regions across the input image and i
 class SpatialConsistencyLoss(keras.losses.Loss):
     def __init__(self, **kwargs):
         super().__init__(reduction="none")
-        
+
         kernel_left_2d = [[0, 0, 0], [-1, 1, 0], [0, 0, 0]]
         kernel_right_2d = [[0, 0, 0], [0, 1, -1], [0, 0, 0]]
         kernel_up_2d = [[0, -1, 0], [0, 1, 0], [0, 0, 0]]
         kernel_down_2d = [[0, 0, 0], [0, 1, 0], [0, -1, 0]]
 
-        self.left_kernel = tf.reshape(tf.constant(kernel_left_2d, dtype=tf.float32), (3, 3, 1, 1))
-        self.right_kernel = tf.reshape(tf.constant(kernel_right_2d, dtype=tf.float32), (3, 3, 1, 1))
-        self.up_kernel = tf.reshape(tf.constant(kernel_up_2d, dtype=tf.float32), (3, 3, 1, 1))
-        self.down_kernel = tf.reshape(tf.constant(kernel_down_2d, dtype=tf.float32), (3, 3, 1, 1))
+        self.left_kernel = tf.reshape(
+            tf.constant(kernel_left_2d, dtype=tf.float32), (3, 3, 1, 1)
+        )
+        self.right_kernel = tf.reshape(
+            tf.constant(kernel_right_2d, dtype=tf.float32), (3, 3, 1, 1)
+        )
+        self.up_kernel = tf.reshape(
+            tf.constant(kernel_up_2d, dtype=tf.float32), (3, 3, 1, 1)
+        )
+        self.down_kernel = tf.reshape(
+            tf.constant(kernel_down_2d, dtype=tf.float32), (3, 3, 1, 1)
+        )
 
     def call(self, y_true, y_pred):
         original_mean = tf.reduce_mean(y_true, 3, keepdims=True)
