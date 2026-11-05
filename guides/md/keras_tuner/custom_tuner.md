@@ -36,7 +36,7 @@ A basic example is shown in the "tune model training" section of
 In this guide, we will subclass the `HyperModel` class and write a custom
 training loop by overriding `HyperModel.fit()`. For how to write a custom
 training loop with Keras, you can refer to the guide
-[Writing a training loop from scratch](https://keras.io/guides/writing_a_training_loop_from_scratch/).
+[Writing a training loop from scratch](https://keras.io/guides/writing_a_custom_training_loop_in_tensorflow/).
 
 First, we import the libraries we need, and we create datasets for training and
 validation. Here, we just use some random data for demonstration purposes.
