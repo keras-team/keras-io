@@ -228,8 +228,8 @@ def illumination_smoothness_loss(x):
     batch_size = tf.shape(x)[0]
     h_x = tf.shape(x)[1]
     w_x = tf.shape(x)[2]
-    count_h = (tf.shape(x)[2] - 1) * tf.shape(x)[3]
-    count_w = tf.shape(x)[2] * (tf.shape(x)[3] - 1)
+    count_h = (tf.shape(x)[1] - 1) * tf.shape(x)[2]
+    count_w = tf.shape(x)[1] * (tf.shape(x)[2] - 1)
     h_tv = tf.reduce_sum(tf.square((x[:, 1:, :, :] - x[:, : h_x - 1, :, :])))
     w_tv = tf.reduce_sum(tf.square((x[:, :, 1:, :] - x[:, :, : w_x - 1, :])))
     batch_size = tf.cast(batch_size, dtype=tf.float32)
@@ -250,17 +250,22 @@ class SpatialConsistencyLoss(keras.losses.Loss):
     def __init__(self, **kwargs):
         super().__init__(reduction="none")
 
-        self.left_kernel = tf.constant(
-            [[[[0, 0, 0]], [[-1, 1, 0]], [[0, 0, 0]]]], dtype=tf.float32
+        kernel_left_2d = [[0, 0, 0], [-1, 1, 0], [0, 0, 0]]
+        kernel_right_2d = [[0, 0, 0], [0, 1, -1], [0, 0, 0]]
+        kernel_up_2d = [[0, -1, 0], [0, 1, 0], [0, 0, 0]]
+        kernel_down_2d = [[0, 0, 0], [0, 1, 0], [0, -1, 0]]
+
+        self.left_kernel = tf.reshape(
+            tf.constant(kernel_left_2d, dtype=tf.float32), (3, 3, 1, 1)
         )
-        self.right_kernel = tf.constant(
-            [[[[0, 0, 0]], [[0, 1, -1]], [[0, 0, 0]]]], dtype=tf.float32
+        self.right_kernel = tf.reshape(
+            tf.constant(kernel_right_2d, dtype=tf.float32), (3, 3, 1, 1)
         )
-        self.up_kernel = tf.constant(
-            [[[[0, -1, 0]], [[0, 1, 0]], [[0, 0, 0]]]], dtype=tf.float32
+        self.up_kernel = tf.reshape(
+            tf.constant(kernel_up_2d, dtype=tf.float32), (3, 3, 1, 1)
         )
-        self.down_kernel = tf.constant(
-            [[[[0, 0, 0]], [[0, 1, 0]], [[0, -1, 0]]]], dtype=tf.float32
+        self.down_kernel = tf.reshape(
+            tf.constant(kernel_down_2d, dtype=tf.float32), (3, 3, 1, 1)
         )
 
     def call(self, y_true, y_pred):
