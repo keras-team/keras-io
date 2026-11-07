@@ -113,3 +113,14 @@ The objectives of this guide will include the following:
 
 * What factors to consider when reporting model efficiency?
 * How to calculate certain metrics like FLOPS, number of examples a model can process per second (both in training and inference mode), etc?
+
+## How to contribute
+
+If you are interested in contributing an example, please:
+
+1. Choose a topic from the list above or propose a related Keras example.
+2. Open an issue to discuss the proposed example before starting.
+3. Include a clear description of the problem, approach, and expected outcome.
+4. Follow the Keras contribution guidelines when submitting your example.
+
+For questions or clarification, please ask in the relevant GitHub issue before beginning substantial work.
