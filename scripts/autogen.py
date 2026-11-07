@@ -21,6 +21,8 @@ import jinja2
 import multiprocessing
 import warnings
 
+import importlib
+
 import autogen_utils
 from master import MASTER
 from examples_master import EXAMPLES_MASTER
@@ -34,7 +36,6 @@ EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "ex
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
 KERAS_TEAM_GH = "https://github.com/keras-team"
 
-# Mapping from Python module name to GitHub repo name.
 _MODULE_TO_REPO = {
     "keras": "keras",
     "keras_tuner": "keras-tuner",
@@ -60,9 +61,7 @@ def _build_project_url():
             ref = "master"
         else:
             ref = f"v{version}"
-        project_url[module_name] = (
-            f"{KERAS_TEAM_GH}/{repo_name}/tree/{ref}/"
-        )
+        project_url[module_name] = f"{KERAS_TEAM_GH}/{repo_name}/tree/{ref}/"
     return project_url
 
 
