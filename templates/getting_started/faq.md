@@ -10,7 +10,6 @@ A list of frequently Asked Keras Questions.
 - [How to do hyperparameter tuning with Keras?](#how-to-do-hyperparameter-tuning-with-keras)
 - [How can I obtain reproducible results using Keras during development?](#how-can-i-obtain-reproducible-results-using-keras-during-development)
 - [What are my options for saving models?](#what-are-my-options-for-saving-models)
-- [How can I install HDF5 or h5py to save my models?](#how-can-i-install-hdf5-or-h5py-to-save-my-models)
 - [How should I cite Keras?](#how-should-i-cite-keras)
 
 ## Training-related questions
@@ -51,8 +50,8 @@ JAX, TensorFlow, and PyTorch. See the following guides:
 - [Multi-GPU distributed training with TensorFlow](/guides/distributed_training_with_tensorflow/)
 - [Multi-GPU distributed training with PyTorch](/guides/distributed_training_with_torch/)
 
-For model parallelism, Keras has its own distribution API, which is currently only support by the JAX backend.
-See [the documentation for the `LayoutMap` API](/api/distribution/).
+For model parallelism, Keras has its own distribution API, which is currently supported by the JAX and PyTorch backends.
+See [the distribution API guide](/guides/distribution/) and [the documentation for the `LayoutMap` API](/api/distribution/).
 
 ---
 
@@ -209,10 +208,12 @@ Assuming you have code for instantiating your model, you can then load the weigh
 model.load_weights('my_model.weights.h5')
 ```
 
-If you need to load the weights into a *different* architecture (with some layers in common), for instance for fine-tuning or transfer-learning, you can load them by *layer name*:
+If you need to load the weights into a *different* architecture (with some layers in common), for instance for fine-tuning or transfer-learning, you can pass `skip_mismatch=True`.
+Weights are matched by the model's topology (layer order), not by layer name, and any layer
+whose weights don't match in number or shape is skipped with a warning:
 
 ```python
-model.load_weights('my_model.weights.h5', by_name=True)
+model.load_weights('my_model.weights.h5', skip_mismatch=True)
 ```
 
 Example:
@@ -231,13 +232,11 @@ model.save_weights(fname)
 # new model
 model = Sequential()
 model.add(Dense(2, input_dim=3, name='dense_1'))  # will be loaded
-model.add(Dense(10, name='new_dense'))  # will not be loaded
+model.add(Dense(10, name='new_dense'))  # will not be loaded (shape mismatch)
 
 # load weights from the first model; will only affect the first layer, dense_1.
-model.load_weights(fname, by_name=True)
+model.load_weights(fname, skip_mismatch=True)
 ```
-
-See also [How can I install HDF5 or h5py to save my models?](#how-can-i-install-hdf5-or-h5py-to-save-my-models) for instructions on how to install `h5py`.
 
 
 **3) Configuration-only saving (serialization)**
@@ -269,7 +268,7 @@ you can pass them to the loading mechanism via the `custom_objects` argument:
 ```python
 from keras.models import load_model
 # Assuming your model includes instance of an "AttentionLayer" class
-model = load_model('my_model.h5', custom_objects={'AttentionLayer': AttentionLayer})
+model = load_model('my_model.keras', custom_objects={'AttentionLayer': AttentionLayer})
 ```
 
 Alternatively, you can use a [custom object scope](https://keras.io/utils/#customobjectscope):
@@ -278,7 +277,7 @@ Alternatively, you can use a [custom object scope](https://keras.io/utils/#custo
 from keras.utils import CustomObjectScope
 
 with CustomObjectScope({'AttentionLayer': AttentionLayer}):
-    model = load_model('my_model.h5')
+    model = load_model('my_model.keras')
 ```
 
 Custom objects handling works the same way for `load_model` & `model_from_json`:
@@ -287,32 +286,6 @@ Custom objects handling works the same way for `load_model` & `model_from_json`:
 from keras.models import model_from_json
 model = model_from_json(json_string, custom_objects={'AttentionLayer': AttentionLayer})
 ```
-
----
-
-### How can I install HDF5 or h5py to save my models?
-
-In order to save your Keras models as HDF5 files, Keras uses the h5py Python package. It is
-a dependency of Keras and should be installed by default. On Debian-based
-distributions, you will have to additionally install `libhdf5`:
-
-<div class="k-default-code-block">
-```
-sudo apt-get install libhdf5-serial-dev
-```
-</div>
-
-If you are unsure if h5py is installed you can open a Python shell and load the
-module via
-
-```
-import h5py
-```
-
-If it imports without error it is installed, otherwise you can find
-[detailed installation instructions here](http://docs.h5py.org/en/latest/build.html).
-
-
 
 ---
 
@@ -748,7 +721,8 @@ intermediate_output = intermediate_layer_model(data)
 ### How can I use pre-trained models in Keras?
 
 You could leverage the [models available in `keras.applications`](/api/applications/),
-or the models available in [KerasCV](/keras_cv/) and [KerasHub](/keras_hub/).
+or the pretrained models available in [KerasHub](/keras_hub/), which you can load with
+`from_preset()`.
 
 
 ---
