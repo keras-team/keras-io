@@ -61,6 +61,12 @@ EXAMPLES_MASTER = {
                     "keras_3": True,
                 },
                 {
+                    "path": "blood_cell_classification",
+                    "title": "Blood cell classification from microscopy images",
+                    "subcategory": "Image classification",
+                    "keras_3": True,
+                },
+                {
                     "path": "cct",
                     "title": "Compact Convolutional Transformers",
                     "subcategory": "Image classification",
