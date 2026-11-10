@@ -2,7 +2,7 @@
 
 **Author:** [Apoorv Nandan](https://twitter.com/NandanApoorv)<br>
 **Date created:** 2021/01/13<br>
-**Last modified:** 2021/01/13<br>
+**Last modified:** 2026/09/02<br>
 **Description:** Training a sequence-to-sequence Transformer for automatic speech recognition.
 
 
@@ -34,7 +34,6 @@ as proposed in the paper, "Attention is All You Need".
 
 
 ```python
-
 import re
 import os
 
@@ -44,9 +43,6 @@ from glob import glob
 import tensorflow as tf
 import keras
 from keras import layers
-
-pattern_wav_name = re.compile(r'([^/\\\.]+)')
-
 ```
 
 ---
@@ -76,7 +72,7 @@ class TokenEmbedding(layers.Layer):
 
 
 class SpeechFeatureEmbedding(layers.Layer):
-    def __init__(self, num_hid=64, maxlen=100):
+    def __init__(self, num_hid=64):
         super().__init__()
         self.conv1 = keras.layers.Conv1D(
             num_hid, 11, strides=2, padding="same", activation="relu"
@@ -213,7 +209,9 @@ class Transformer(keras.Model):
         self.target_maxlen = target_maxlen
         self.num_classes = num_classes
 
-        self.enc_input = SpeechFeatureEmbedding(num_hid=num_hid, maxlen=source_maxlen)
+        self.enc_input = SpeechFeatureEmbedding(
+            num_hid=num_hid,
+        )
         self.dec_input = TokenEmbedding(
             num_vocab=num_classes, maxlen=target_maxlen, num_hid=num_hid
         )
@@ -262,7 +260,7 @@ class Transformer(keras.Model):
             preds = self([source, dec_input])
             one_hot = tf.one_hot(dec_target, depth=self.num_classes)
             mask = tf.math.logical_not(tf.math.equal(dec_target, 0))
-            loss = self.compute_loss(y=one_hot, y_pred=preds, sample_weight=mask)
+            loss = self.compute_loss(None, one_hot, preds, sample_weight=mask)
         trainable_vars = self.trainable_variables
         gradients = tape.gradient(loss, trainable_vars)
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
@@ -277,7 +275,7 @@ class Transformer(keras.Model):
         preds = self([source, dec_input])
         one_hot = tf.one_hot(dec_target, depth=self.num_classes)
         mask = tf.math.logical_not(tf.math.equal(dec_target, 0))
-        loss = self.compute_loss(y=one_hot, y_pred=preds, sample_weight=mask)
+        loss = self.compute_loss(None, one_hot, preds, sample_weight=mask)
         self.loss_metric.update_state(loss)
         return {"loss": self.loss_metric.result()}
 
@@ -306,33 +304,45 @@ takes ~5 minutes for the extraction of files.
 
 
 ```python
-keras.utils.get_file(
-    os.path.join(os.getcwd(), "data.tar.gz"),
-    "https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2",
+pattern_wav_name = re.compile(r"([^/\\\.]+)")
+path = keras.utils.get_file(
+    fname="LJSpeech-1.1.tar.bz2",
+    origin="https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2",
     extract=True,
-    archive_format="tar",
     cache_dir=".",
 )
 
+base_dir = os.path.dirname(path)
 
-saveto = "./datasets/LJSpeech-1.1"
-wavs = glob("{}/**/*.wav".format(saveto), recursive=True)
+saveto = None
+for root, _, files in os.walk(base_dir):
+    if "metadata.csv" in files and "LJSpeech" in root:
+        saveto = root
+        break
+
+if saveto is None:
+    raise FileNotFoundError("metadata.csv not found after extraction")
+
+wavs = glob(os.path.join(saveto, "**", "*.wav"), recursive=True)
 
 id_to_text = {}
 with open(os.path.join(saveto, "metadata.csv"), encoding="utf-8") as f:
     for line in f:
-        id = line.strip().split("|")[0]
-        text = line.strip().split("|")[2]
-        id_to_text[id] = text
+        parts = line.strip().split("|")
+        if len(parts) < 3:
+            continue
+        id_to_text[parts[0]] = parts[2]
 
 
 def get_data(wavs, id_to_text, maxlen=50):
-    """returns mapping of audio paths and transcription texts"""
+    """Returns mapping of audio paths and transcription texts."""
     data = []
     for w in wavs:
-        id = pattern_wav_name.split(w)[-4]
-        if len(id_to_text[id]) < maxlen:
+        id = os.path.splitext(os.path.basename(w))[0]
+
+        if id in id_to_text and len(id_to_text[id]) < maxlen:
             data.append({"audio": w, "text": id_to_text[id]})
+
     return data
 
 ```
@@ -340,10 +350,11 @@ def get_data(wavs, id_to_text, maxlen=50):
 <div class="k-default-codeblock">
 ```
 Downloading data from https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2
- 2748572632/2748572632 ━━━━━━━━━━━━━━━━━━━━ 18s 0us/step
 
+2748572632/2748572632 ━━━━━━━━━━━━━━━━━━━━ 278s 0us/step
 ```
 </div>
+
 ---
 ## Preprocess the dataset
 
@@ -432,9 +443,9 @@ val_ds = create_tf_dataset(test_data, bs=4)
 <div class="k-default-codeblock">
 ```
 vocab size 34
-
 ```
 </div>
+
 ---
 ## Callbacks to display predictions
 
@@ -567,43 +578,27 @@ history = model.fit(ds, validation_data=val_ds, callbacks=[display_cb], epochs=1
 
 <div class="k-default-codeblock">
 ```
-   1/203 [37m━━━━━━━━━━━━━━━━━━━━  9:20:11 166s/step - loss: 2.2387
+/Users/maitry/Metric_similar/metric/lib/python3.12/site-packages/keras/src/trainers/epoch_iterator.py:74: UserWarning: `shuffle=True` was passed, but will be ignored since the data `x` was provided as a tf.data.Dataset. The Dataset is expected to already be shuffled (via `.shuffle(buffer_size)`).
+  self.data_adapter = data_adapters.get_data_adapter(
 
-WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1700071380.331418  678094 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+203/203 ━━━━━━━━━━━━━━━━━━━━ 0s 3s/step - loss: 1.5618
 
- 203/203 ━━━━━━━━━━━━━━━━━━━━ 0s 947ms/step - loss: 1.8285target:     <the relations between lee and marina oswald are of great importance in any attempt to understand oswald#s possible motivation.>
-prediction: <the the he at the t the an of t te the ale t he t te ar the in the the s the s tan as t the t as re the te the ast he and t the s s the thee thed the the thes the s te te he t the of in anae o the or
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-target:     <he was in consequence put out of the protection of their internal law, end quote. their code was a subject of some curiosity.>
-prediction: <the the he at the t the an of t te the ale t he t te ar the in the the s the s tan as t the t as re the te the ast he and t the s s the thee thed the the thes the s te te he t the of in anae o the or
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-target:     <that is why i occasionally leave this scene of action for a few days>
-prediction: <the the he at the t the an of t te the ale t he t te ar the in the the s the s tan ase athe t as re the te the ast he and t the s s the thee thed the the thes the s te te he t the of in anse o the or
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-target:     <it probably contributed greatly to the general dissatisfaction which he exhibited with his environment,>
-prediction: <the the he at the t the an of t te the ale t he t te ar the in the the s the s tan as t the t as re the te the ast he and t the s s the thee thed the the thes the s te te he t the of in anae o the or
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
- 203/203 ━━━━━━━━━━━━━━━━━━━━ 428s 1s/step - loss: 1.8276 - val_loss: 1.5233
+target:     <presently fell, and were at once trampled to death.>
+prediction: <the te te t t the t the the t te are tere te t te te the t the an the the there an the the the the te an the ther the tere te the t the t therere the t onerere e pre the t te tere e o t there therere
 
+target:     <he told his story with perfect coolness and selfpossession, but in a grave and serious tone.>
+prediction: <the te te t t the t the t s te t are tere te t te te the t the an t at there the t the the the the te an the te the e tere te the t the t therere the t onerere e pre the t te tere e o t there therere
+
+target:     <scoggins lost sight of him behind some shrubbery on the southeast corner lot,>
+prediction: <the te te t t the t the the te t are tere te t te te the t the an the the there an the the the the te an the te the e tere te the t the t therere the t onerere e pre the t te tere e o t there therere
+
+target:     <we must make it a national principle that we will not tolerate a large army of unemployed and that we will arrange our national economy>
+prediction: <the te te t t the t the an o t t are tere te t te te the t the an t an ar arere an the the the the te an the te the e tere te the t the t there r the t on t ore the an a t te t te ano t there therere
+
+203/203 ━━━━━━━━━━━━━━━━━━━━ 630s 3s/step - loss: 1.5618 - val_loss: 1.4839
 ```
 </div>
+
 In practice, you should train for around 100 epochs or more.
 
 Some of the predicted text at or around epoch 35 may look as follows:
