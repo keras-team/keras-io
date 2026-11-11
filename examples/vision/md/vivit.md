@@ -2,7 +2,7 @@
 
 **Author:** [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ayush Thakur](https://twitter.com/ayushthakur0) (equal contribution)<br>
 **Date created:** 2022/01/12<br>
-**Last modified:**  2025/10/16<br>
+**Last modified:** 2026/08/31<br>
 **Description:** A Transformer-based architecture for video classification.
 
 
@@ -22,7 +22,7 @@ sequences of image features, then apply a classification head on
 the learned sequence representation.
 The Keras example
 [Video Classification with a CNN-RNN Architecture](https://keras.io/examples/vision/video_classification/)
-explains this approach in detail. Alernatively, you can also
+explains this approach in detail. Alternatively, you can also
 build a hybrid Transformer-based model for video classification as shown in the Keras example
 [Video Classification with Transformers](https://keras.io/examples/vision/video_transformers/).
 
@@ -87,12 +87,12 @@ EPOCHS = 60
 
 # TUBELET EMBEDDING
 PATCH_SIZE = (8, 8, 8)
-NUM_PATCHES = (INPUT_SHAPE[0] // PATCH_SIZE[0]) ** 2
 
 # ViViT ARCHITECTURE
 LAYER_NORM_EPS = 1e-6
 PROJECTION_DIM = 128
 NUM_HEADS = 8
+HIDDEN_DIM = PROJECTION_DIM * NUM_HEADS
 NUM_LAYERS = 8
 ```
 
@@ -284,7 +284,7 @@ def create_vivit_classifier(
     input_shape=INPUT_SHAPE,
     transformer_layers=NUM_LAYERS,
     num_heads=NUM_HEADS,
-    embed_dim=PROJECTION_DIM,
+    embed_dim=HIDDEN_DIM,
     layer_norm_eps=LAYER_NORM_EPS,
     num_classes=NUM_CLASSES,
 ):
@@ -341,9 +341,9 @@ def run_experiment():
     # Initialize model
     model = create_vivit_classifier(
         tubelet_embedder=TubeletEmbedding(
-            embed_dim=PROJECTION_DIM, patch_size=PATCH_SIZE
+            embed_dim=HIDDEN_DIM, patch_size=PATCH_SIZE
         ),
-        positional_encoder=PositionalEncoder(embed_dim=PROJECTION_DIM),
+        positional_encoder=PositionalEncoder(embed_dim=HIDDEN_DIM),
     )
 
     # Compile the model with the optimizer, loss function
