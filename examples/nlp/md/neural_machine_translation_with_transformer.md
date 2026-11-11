@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2021/05/26<br>
-**Last modified:** 2024/11/18<br>
+**Last modified:** 2026/08/24<br>
 **Description:** Implementing a sequence-to-sequence Transformer and training it on a machine translation task.
 
 
@@ -420,11 +420,7 @@ class TransformerDecoder(layers.Layer):
         j = ops.arange(sequence_length)
         mask = ops.cast(i >= j, dtype="int32")
         mask = ops.reshape(mask, (1, input_shape[1], input_shape[1]))
-        mult = ops.concatenate(
-            [ops.expand_dims(batch_size, -1), ops.convert_to_tensor([1, 1])],
-            axis=0,
-        )
-        return ops.tile(mask, mult)
+        return ops.broadcast_to(mask, (batch_size, sequence_length, sequence_length))
 
     def get_config(self):
         config = super().get_config()
@@ -453,12 +449,11 @@ encoder_outputs = TransformerEncoder(embed_dim, latent_dim, num_heads)(x)
 encoder = keras.Model(encoder_inputs, encoder_outputs)
 
 decoder_inputs = keras.Input(shape=(None,), dtype="int64", name="decoder_inputs")
-encoded_seq_inputs = keras.Input(shape=(None, embed_dim), name="decoder_state_inputs")
+
 x = PositionalEmbedding(sequence_length, vocab_size, embed_dim)(decoder_inputs)
 x = TransformerDecoder(embed_dim, latent_dim, num_heads)([x, encoder_outputs])
 x = layers.Dropout(0.5)(x)
 decoder_outputs = layers.Dense(vocab_size, activation="softmax")(x)
-decoder = keras.Model([decoder_inputs, encoded_seq_inputs], decoder_outputs)
 
 transformer = keras.Model(
     {"encoder_inputs": encoder_inputs, "decoder_inputs": decoder_inputs},
