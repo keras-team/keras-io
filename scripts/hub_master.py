@@ -2745,6 +2745,76 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "qwen2_vl/",
+            "title": "Qwen2 VL",
+            "toc": True,
+            "children": [
+                {
+                    "path": "qwen2_vl_tokenizer",
+                    "title": "Qwen2VLTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.Qwen2VLTokenizer",
+                        "keras_hub.tokenizers.Qwen2VLTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "qwen2_vl_image_converter",
+                    "title": "Qwen2VLImageConverter",
+                    "generate": [
+                        "keras_hub.layers.Qwen2VLImageConverter",
+                        "keras_hub.layers.Qwen2VLImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "qwen2_vl_video_converter",
+                    "title": "Qwen2VLVideoConverter",
+                    "generate": [
+                        "keras_hub.layers.Qwen2VLVideoConverter",
+                        "keras_hub.layers.Qwen2VLVideoConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "qwen2_vl_backbone",
+                    "title": "Qwen2VLBackbone model",
+                    "generate": [
+                        "keras_hub.models.Qwen2VLBackbone",
+                        "keras_hub.models.Qwen2VLBackbone.from_preset",
+                        "keras_hub.models.Qwen2VLBackbone.token_embedding",
+                        "keras_hub.models.Qwen2VLBackbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "qwen2_vl_causal_lm",
+                    "title": "Qwen2VLCausalLM model",
+                    "generate": [
+                        "keras_hub.models.Qwen2VLCausalLM",
+                        "keras_hub.models.Qwen2VLCausalLM.from_preset",
+                        "keras_hub.models.Qwen2VLCausalLM.generate",
+                        "keras_hub.models.Qwen2VLCausalLM.backbone",
+                        "keras_hub.models.Qwen2VLCausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "qwen2_vl_causal_lm_preprocessor",
+                    "title": "Qwen2VLCausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.Qwen2VLCausalLMPreprocessor",
+                        "keras_hub.models.Qwen2VLCausalLMPreprocessor.from_preset",
+                        "keras_hub.models.Qwen2VLCausalLMPreprocessor.tokenizer",
+                        "keras_hub.models.Qwen2VLCausalLMPreprocessor.image_converter",
+                        "keras_hub.models.Qwen2VLCausalLMPreprocessor.video_converter",
+                    ],
+                },
+                {
+                    "path": "qwen2_vl_vision_encoder",
+                    "title": "Qwen2VLVisionEncoder model",
+                    "generate": [
+                        "keras_hub.models.Qwen2VLVisionEncoder",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "qwen3/",
             "title": "Qwen3",
             "toc": True,
