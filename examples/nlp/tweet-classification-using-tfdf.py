@@ -37,9 +37,8 @@ Install Tensorflow Decision Forest using following command :
 import pandas as pd
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
+import keras
 import tensorflow_hub as hub
-from tensorflow.keras import layers
 import tensorflow_decision_forests as tfdf
 import matplotlib.pyplot as plt
 
@@ -158,9 +157,16 @@ To learn more about these pretrained embeddings, see
 
 """
 
-sentence_encoder_layer = hub.KerasLayer(
-    "https://tfhub.dev/google/universal-sentence-encoder/4"
-)
+sentence_encoder_url = "https://tfhub.dev/google/universal-sentence-encoder/4"
+
+class SentenceEncoderLayer(keras.layers.Layer):
+    def __init__(self, **kwargs):
+        super(SentenceEncoderLayer, self).__init__(**kwargs)
+        self.encoder = hub.KerasLayer(sentence_encoder_url)  
+
+    def call(self, inputs):
+        return self.encoder(inputs)
+
 
 """
 ## Creating our models
@@ -175,8 +181,8 @@ the Gradient Boosted Trees model.
 Building model_1
 """
 
-inputs = layers.Input(shape=(), dtype=tf.string)
-outputs = sentence_encoder_layer(inputs)
+inputs = keras.layers.Input(shape=(), dtype="string")
+outputs = SentenceEncoderLayer()(inputs)
 preprocessor = keras.Model(inputs=inputs, outputs=outputs)
 model_1 = tfdf.keras.GradientBoostedTreesModel(preprocessing=preprocessor)
 
@@ -278,9 +284,9 @@ for name, value in results.items():
 
 test_df.reset_index(inplace=True, drop=True)
 for index, row in test_df.iterrows():
-    text = tf.expand_dims(row["text"], axis=0)
+    text = keras.ops.expand_dims(row["text"], axis=0)
     preds = model_1.predict_step(text)
-    preds = tf.squeeze(tf.round(preds))
+    preds = keras.ops.squeeze(keras.ops.round(preds))
     print(f"Text: {row['text']}")
     print(f"Prediction: {int(preds)}")
     print(f"Ground Truth : {row['target']}")
