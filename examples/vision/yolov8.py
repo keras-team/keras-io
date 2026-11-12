@@ -413,7 +413,13 @@ fed into the model.
 
 
 def dict_to_tuple(inputs):
-    return inputs["images"], inputs["bounding_boxes"]
+    return (
+        inputs["images"],
+        {
+            "boxes": inputs["bounding_boxes"]["boxes"],
+            "classes": inputs["bounding_boxes"]["classes"],
+        },
+    )
 
 
 train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
