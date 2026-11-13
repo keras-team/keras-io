@@ -22,7 +22,8 @@ selections.
 We are not measuring the best possible performance achievable by each framework,
 but the out-of-the-box performance of common user workflows. With this goal in
 mind, we leveraged pre-existing implementations from KerasCV and KerasHub for
-the Keras versions of the models.
+the Keras versions of the models (KerasCV has since been superseded by
+KerasHub).
 
 ## Hardware
 
@@ -76,9 +77,9 @@ better.
 | **Mistral<br>(generate)** | 32 | NA | 966.06 | **957.25** | 10,932.59<sup>*</sup> | **957.25** |
 | **Mistral<br>(generate)** | 1 | NA | 743.28 | **679.30** | 11,054.67<sup>*</sup> | **679.30** |
 
-\* _LLM inference with the PyTorch backend is abnormally slow at this time
-because KerasHub uses static sequence padding, unlike HuggingFace. This will be
-addressed soon._
+\* _At the time these benchmarks were run (keras-benchmarks v0.0.5), LLM
+inference with the PyTorch backend was abnormally slow because KerasHub used
+static sequence padding, unlike HuggingFace._
 
 ## Discussion
 
@@ -95,10 +96,10 @@ find the ideal match for your model.
 ### Key Finding 2: Keras 3 is faster than Keras 2
 
 We also calculated the throughput (steps/ms) increase of Keras 3 (using its
-best-performing backend) over Keras 2 with TensorFlow from Table 1. Results are
+best-performing backend) over Keras 2 with TensorFlow from Table 2. Results are
 shown in the following figure.
 
-![Figrue 2](https://i.imgur.com/jPncf0F.png)
+![Figure 1: Bar chart of the Keras 3 throughput increase over Keras 2 for training and prediction on SegmentAnything, StableDiffusion, and BERT](/img/benchmarks/keras3_speedup_over_keras2.png)
 
 **Figure 1**: Keras 3 speedup over Keras 2 measured in throughput (steps/ms)
 
@@ -116,8 +117,8 @@ XLA compilation in certain use cases.
 ## Conclusions
 
 Framework performance depends heavily on the specific model. Keras 3 empowers
-you to select the fastest framework for your task – an option almost always to
-outperform both Keras 2.
+you to select the fastest framework for your task – an option that almost always
+outperforms Keras 2.
 
 ## References
 
