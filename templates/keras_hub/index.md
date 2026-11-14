@@ -32,6 +32,11 @@ To install the latest KerasHub release with Keras 3, simply run:
 pip install --upgrade keras-hub
 ```
 
+**Note for Google Colab users:** Colab comes with the deprecated `keras-nlp`
+package pre-installed, which conflicts with `keras-hub`. Before installing
+KerasHub, run `!pip uninstall -y keras-nlp` in a notebook cell to avoid
+dependency errors.
+
 To install the latest nightly changes for both KerasHub and Keras, you can use
 our nightly package.
 
