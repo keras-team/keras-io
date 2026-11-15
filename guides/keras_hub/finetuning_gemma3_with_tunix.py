@@ -29,12 +29,11 @@ importing the trained weights back into KerasHub are outside this guide.
 ## Setup
 
 Use a fresh Python 3.12 environment. These optional dependency pins reproduce
-the CPU environment used for this guide. The KerasHub source revision pins the
-exporter implementation used for verification.
+the CPU environment used for this guide.
 """
 
 """shell
-pip install "keras-hub @ git+https://github.com/keras-team/keras-hub.git@7ff25e361a42e923def75351a022778d0480e6e6"
+pip install "keras-hub==0.33.0"
 pip install "keras==3.15.1" "google-tunix==0.1.7" "jax==0.11.0" "flax==0.12.8" "safetensors==0.7.0" "datasets==4.4.1" "huggingface-hub==0.36.2" "gcsfs==2025.10.0"
 """
 
