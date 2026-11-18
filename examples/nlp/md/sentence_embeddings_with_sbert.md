@@ -2,7 +2,7 @@
 
 **Author:** [Mohammed Abu El-Nasr](https://github.com/abuelnasr0)<br>
 **Date created:** 2023/07/14<br>
-**Last modified:** 2023/07/14<br>
+**Last modified:** 2026/06/10<br>
 **Description:** Fine-tune a RoBERTa model to generate sentence embeddings using KerasHub.
 
 
@@ -58,7 +58,7 @@ training. This will help us reduce the training time.
 !pip install -q --upgrade keras  # Upgrade to Keras 3.
 ```
 
-
+    
 ```python
 import os
 
@@ -72,6 +72,11 @@ import sklearn.cluster as cluster
 
 keras.mixed_precision.set_global_policy("mixed_float16")
 ```
+<div class="k-default-codeblock">
+```
+[[34;49mnotice[1;39;49m][39;49m To update, run: [32;49mpip install --upgrade pip
+```
+</div>
 
 ---
 ## Fine-tune the model using siamese networks
@@ -128,14 +133,22 @@ def change_range(x):
 def prepare_dataset(dataset, num_batches, batch_size):
     dataset = dataset.map(
         lambda z: (
-            [z["sentence1"], z["sentence2"]],
-            [tf.cast(change_range(z["label"]), tf.float32)],
+            (
+                z["sentence1"],
+                z["sentence2"],
+            ),
+            tf.expand_dims(
+                tf.cast(change_range(z["label"]), tf.float32),
+                axis=-1,
+            ),
         ),
         num_parallel_calls=AUTOTUNE,
     )
+
     dataset = dataset.batch(batch_size)
     dataset = dataset.take(num_batches)
     dataset = dataset.prefetch(AUTOTUNE)
+
     return dataset
 
 
@@ -163,52 +176,14 @@ for x, y in stsb_train:
 <div class="k-default-codeblock">
 ```
 sentence 1 : b"A young girl is sitting on Santa's lap." 
-sentence 2 : b"A little girl is sitting on Santa's lap" 
+sentence 2 : b'A women sitting at a table drinking with a basketball picture in the background.' 
 similarity : [0.9200001] 
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-sentence 1 : b'A women sitting at a table drinking with a basketball picture in the background.' 
+
+sentence 1 : b"A little girl is sitting on Santa's lap" 
 sentence 2 : b'A woman in a sari drinks something while sitting at a table.' 
 similarity : [0.03999996] 
 ```
 </div>
-    
-<div class="k-default-codeblock">
-```
-sentence 1 : b'Norway marks anniversary of massacre' 
-sentence 2 : b"Norway Marks Anniversary of Breivik's Massacre" 
-similarity : [0.52] 
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-sentence 1 : b'US drone kills six militants in Pakistan: officials' 
-sentence 2 : b'US missiles kill 15 in Pakistan: officials' 
-similarity : [-0.03999996] 
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-sentence 1 : b'On Tuesday, the central bank left interest rates steady, as expected, but also declared that overall risks were weighted toward weakness and warned of deflation risks.' 
-sentence 2 : b"The central bank's policy board left rates steady for now, as widely expected, but surprised the market by declaring that overall risks were weighted toward weakness." 
-similarity : [0.6] 
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-sentence 1 : b'At one of the three sampling sites at Huntington Beach, the bacteria reading came back at 160 on June 16 and at 120 on June 23.' 
-sentence 2 : b'The readings came back at 160 on June 16 and 120 at June 23 at one of three sampling sites at Huntington Beach.' 
-similarity : [0.29999995] 
-```
-</div>
-    
-
 
 #### Build the encoder model.
 
@@ -227,12 +202,14 @@ layer to exclude padded tokens from being averaged.
 ```python
 preprocessor = keras_hub.models.RobertaPreprocessor.from_preset("roberta_base_en")
 backbone = keras_hub.models.RobertaBackbone.from_preset("roberta_base_en")
-inputs = keras.Input(shape=(1,), dtype="string", name="sentence")
+inputs = keras.Input(shape=(), dtype="string", name="sentence")
 x = preprocessor(inputs)
 h = backbone(x)
 embedding = keras.layers.GlobalAveragePooling1D(name="pooling_layer")(
-    h, x["padding_mask"]
+    h,
+    mask=x["padding_mask"],
 )
+
 n_embedding = keras.layers.UnitNormalization(axis=1)(embedding)
 roberta_normal_encoder = keras.Model(inputs=inputs, outputs=n_embedding)
 
@@ -240,30 +217,30 @@ roberta_normal_encoder.summary()
 ```
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_1"</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional"</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
-┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
-┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
-│ sentence            │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ roberta_preprocess… │ [(<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>),     │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ sentence[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]       │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">RobertaPreprocess…</span> │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)]      │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ roberta_backbone    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)  │ <span style="color: #00af00; text-decoration-color: #00af00">124,05…</span> │ roberta_preprocesso… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">RobertaBackbone</span>)   │                   │         │ roberta_preprocesso… │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ pooling_layer       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ roberta_backbone[<span style="color: #00af00; text-decoration-color: #00af00">0</span>]… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │ roberta_preprocesso… │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ unit_normalization  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ pooling_layer[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]  │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">UnitNormalization</span>) │                   │         │                      │
-└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold">    Param # </span>┃<span style="font-weight: bold"> Connected to      </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
+│ sentence            │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)            │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                 │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ roberta_text_class… │ [(<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>),     │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ sentence[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">RobertaTextClassi…</span> │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)]      │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ roberta_backbone    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)  │ <span style="color: #00af00; text-decoration-color: #00af00">124,052,7…</span> │ roberta_text_cla… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">RobertaBackbone</span>)   │                   │            │ roberta_text_cla… │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ pooling_layer       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)       │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ roberta_backbone… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │            │ roberta_text_cla… │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ unit_normalization  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)       │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ pooling_layer[<span style="color: #00af00; text-decoration-color: #00af00">0</span>]… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">UnitNormalization</span>) │                   │            │                   │
+└─────────────────────┴───────────────────┴────────────┴───────────────────┘
 </pre>
 
 
@@ -302,14 +279,26 @@ sentences.
 
 class RegressionSiamese(keras.Model):
     def __init__(self, encoder, **kwargs):
-        inputs = keras.Input(shape=(2,), dtype="string", name="sentences")
-        sen1, sen2 = keras.ops.split(inputs, 2, axis=1)
+        sen1 = keras.Input(
+            shape=(),
+            dtype="string",
+            name="sentence1",
+        )
+        sen2 = keras.Input(
+            shape=(),
+            dtype="string",
+            name="sentence2",
+        )
         u = encoder(sen1)
         v = encoder(sen2)
-        cosine_similarity_scores = keras.ops.matmul(u, keras.ops.transpose(v))
+        cosine_similarity_scores = keras.ops.sum(
+            u * v,
+            axis=-1,
+            keepdims=True,
+        )
 
         super().__init__(
-            inputs=inputs,
+            inputs=[sen1, sen2],
             outputs=cosine_similarity_scores,
             **kwargs,
         )
@@ -346,12 +335,12 @@ for i, sim in enumerate(cosine_similarity_scores[0]):
 
 <div class="k-default-codeblock">
 ```
-cosine similarity score between sentence 1 and the query = 0.96630859375 
-cosine similarity score between sentence 2 and the query = 0.97607421875 
+cosine similarity score between sentence 1 and the query = 0.966796875 
+cosine similarity score between sentence 2 and the query = 0.97705078125 
 cosine similarity score between sentence 3 and the query = 0.99365234375 
-
 ```
 </div>
+
 For the training we will use `MeanSquaredError()` as loss function, and `Adam()`
 optimizer with learning rate = 2e-5.
 
@@ -370,12 +359,15 @@ roberta_regression_siamese.fit(stsb_train, validation_data=stsb_valid, epochs=1)
 
 <div class="k-default-codeblock">
 ```
- 300/300 ━━━━━━━━━━━━━━━━━━━━ 115s 297ms/step - loss: 0.4751 - val_loss: 0.4025
+/Users/maitry/Metric_similar/metric/lib/python3.12/site-packages/tensorflow/python/util/numpy_compat.py:47: RuntimeWarning: overflow encountered in cast
+  return np.array(values, copy=copy, order=order).astype(dtype)
 
-<keras.src.callbacks.history.History at 0x7f5a78392140>
+300/300 ━━━━━━━━━━━━━━━━━━━━ 5729s 19s/step - loss: 0.3841 - val_loss: 0.4655
 
+<keras.src.callbacks.history.History at 0x314980440>
 ```
 </div>
+
 Let's try the model after training, we will notice a huge difference in the output. That
 means that the model after fine-tuning is capable of producing semantically meaningful
 embeddings. where the semantically similar sentences have a small angle between them. and
@@ -402,12 +394,12 @@ for i, sim in enumerate(cosine_simalarities[0]):
 
 <div class="k-default-codeblock">
 ```
-cosine similarity between sentence 1 and the query = 0.10986328125 
-cosine similarity between sentence 2 and the query = 0.53466796875 
-cosine similarity between sentence 3 and the query = 0.83544921875 
-
+cosine similarity between sentence 1 and the query = 0.1412353515625 
+cosine similarity between sentence 2 and the query = 0.701171875 
+cosine similarity between sentence 3 and the query = 0.8759765625 
 ```
 </div>
+
 ### Fine-tune Using the triplet Objective Function
 
 For the Siamese network with the triplet objective function, three sentences are passed
@@ -440,8 +432,17 @@ AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 
 def prepare_wiki_data(dataset, num_batches):
+    dataset = dataset.unbatch()
     dataset = dataset.map(
-        lambda z: ((z["Sentence1"], z["Sentence2"], z["Sentence3"]), 0)
+        lambda z: (
+            (
+                z["Sentence1"],
+                z["Sentence2"],
+                z["Sentence3"],
+            ),
+            0,
+        ),
+        num_parallel_calls=AUTOTUNE,
     )
     dataset = dataset.batch(6)
     dataset = dataset.take(num_batches)
@@ -467,12 +468,14 @@ wiki_test = prepare_wiki_data(wiki_test, NUM_TEST_BATCHES)
 ```
 Archive:  wikipedia-sections-triplets.zip
   inflating: wikipedia-sections-triplets/validation.csv  
+
   inflating: wikipedia-sections-triplets/Readme.txt  
   inflating: wikipedia-sections-triplets/test.csv  
-  inflating: wikipedia-sections-triplets/train.csv  
 
+  inflating: wikipedia-sections-triplets/train.csv  
 ```
 </div>
+
 #### Build the encoder model
 
 For this encoder model, we will use RoBERTa with mean pooling and we will not normalize
@@ -487,42 +490,47 @@ sentence.
 ```python
 preprocessor = keras_hub.models.RobertaPreprocessor.from_preset("roberta_base_en")
 backbone = keras_hub.models.RobertaBackbone.from_preset("roberta_base_en")
-input = keras.Input(shape=(1,), dtype="string", name="sentence")
-
-x = preprocessor(input)
+inputs = keras.Input(
+    shape=(),
+    dtype="string",
+    name="triplet_sentence",
+)  # use a unique name
+x = preprocessor(inputs)
 h = backbone(x)
 embedding = keras.layers.GlobalAveragePooling1D(name="pooling_layer")(
-    h, x["padding_mask"]
+    h,
+    mask=x["padding_mask"],
 )
-
-roberta_encoder = keras.Model(inputs=input, outputs=embedding)
-
+roberta_encoder = keras.Model(
+    inputs=inputs,
+    outputs=embedding,
+)
 
 roberta_encoder.summary()
 ```
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_3"</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_1"</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
-┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
-┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
-│ sentence            │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ roberta_preprocess… │ [(<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>),     │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ sentence[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]       │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">RobertaPreprocess…</span> │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)]      │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ roberta_backbone_1  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)  │ <span style="color: #00af00; text-decoration-color: #00af00">124,05…</span> │ roberta_preprocesso… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">RobertaBackbone</span>)   │                   │         │ roberta_preprocesso… │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ pooling_layer       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ roberta_backbone_1[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │ roberta_preprocesso… │
-└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold">    Param # </span>┃<span style="font-weight: bold"> Connected to      </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
+│ triplet_sentence    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)            │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                 │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ roberta_text_class… │ [(<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>),     │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ triplet_sentence… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">RobertaTextClassi…</span> │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)]      │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ roberta_backbone    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)  │ <span style="color: #00af00; text-decoration-color: #00af00">124,052,7…</span> │ roberta_text_cla… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">RobertaBackbone</span>)   │                   │            │ roberta_text_cla… │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ pooling_layer       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)       │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ roberta_backbone… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │            │ roberta_text_cla… │
+└─────────────────────┴───────────────────┴────────────┴───────────────────┘
 </pre>
 
 
@@ -557,23 +565,48 @@ embedding for each sentence, and we will calculate the `positive_dist` and
 
 class TripletSiamese(keras.Model):
     def __init__(self, encoder, **kwargs):
-        anchor = keras.Input(shape=(1,), dtype="string")
-        positive = keras.Input(shape=(1,), dtype="string")
-        negative = keras.Input(shape=(1,), dtype="string")
+        anchor = keras.Input(
+            shape=(),
+            dtype="string",
+            name="anchor",
+        )
+        positive = keras.Input(
+            shape=(),
+            dtype="string",
+            name="positive",
+        )
+        negative = keras.Input(
+            shape=(),
+            dtype="string",
+            name="negative",
+        )
 
         ea = encoder(anchor)
         ep = encoder(positive)
         en = encoder(negative)
 
-        positive_dist = keras.ops.sum(keras.ops.square(ea - ep), axis=1)
-        negative_dist = keras.ops.sum(keras.ops.square(ea - en), axis=1)
+        positive_dist = keras.ops.sum(
+            keras.ops.square(ea - ep),
+            axis=-1,
+        )
+        negative_dist = keras.ops.sum(
+            keras.ops.square(ea - en),
+            axis=-1,
+        )
 
-        positive_dist = keras.ops.sqrt(positive_dist)
-        negative_dist = keras.ops.sqrt(negative_dist)
+        positive_dist = keras.ops.sqrt(positive_dist + 1e-12)
+        negative_dist = keras.ops.sqrt(negative_dist + 1e-12)
 
-        output = keras.ops.stack([positive_dist, negative_dist], axis=0)
+        output = keras.ops.stack(
+            [positive_dist, negative_dist],
+            axis=-1,
+        )
 
-        super().__init__(inputs=[anchor, positive, negative], outputs=output, **kwargs)
+        super().__init__(
+            inputs=[anchor, positive, negative],
+            outputs=output,
+            **kwargs,
+        )
 
         self.encoder = encoder
 
@@ -604,10 +637,11 @@ class TripletLoss(keras.losses.Loss):
         self.margin = margin
 
     def call(self, y_true, y_pred):
-        positive_dist, negative_dist = tf.unstack(y_pred, axis=0)
+        positive_dist = y_pred[:, 0]
+        negative_dist = y_pred[:, 1]
 
         losses = keras.ops.relu(positive_dist - negative_dist + self.margin)
-        return keras.ops.mean(losses, axis=0)
+        return keras.ops.mean(losses)
 
 ```
 
@@ -629,14 +663,20 @@ roberta_triplet_siamese.compile(
 roberta_triplet_siamese.fit(wiki_train, validation_data=wiki_test, epochs=1)
 ```
 
+    
 <div class="k-default-codeblock">
 ```
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 128s 467ms/step - loss: 0.7822 - val_loss: 0.7126
+200/Unknown 4720s 24s/step - loss: 0.8275
 
-<keras.src.callbacks.history.History at 0x7f5c3636c580>
+/Users/maitry/Metric_similar/metric/lib/python3.12/site-packages/keras/src/trainers/epoch_iterator.py:164: UserWarning: Your input ran out of data; interrupting training. Make sure that your dataset or generator can generate at least `steps_per_epoch * epochs` batches. You may need to use the `.repeat()` function when building your dataset.
+  self._interrupted_warning()
 
+200/200 ━━━━━━━━━━━━━━━━━━━━ 28571s 143s/step - loss: 0.7538 - val_loss: 0.6217
+
+<keras.src.callbacks.history.History at 0x36d0336b0>
 ```
 </div>
+
 Let's try this model in a clustering example. Here are 6 questions. first 3 questions
 about learning English, and the last 3 questions about working online. Let's see if the
 embeddings produced by our encoder will cluster them correctly.
@@ -669,6 +709,12 @@ sentence (How to earn money online?) belongs to cluster 0
 sentence (How do I earn money online?) belongs to cluster 0
 sentence (How to work and earn money through internet?) belongs to cluster 0
 
+/Users/maitry/Metric_similar/metric/lib/python3.12/site-packages/sklearn/utils/extmath.py:227: RuntimeWarning: divide by zero encountered in matmul
+  ret = a @ b
+/Users/maitry/Metric_similar/metric/lib/python3.12/site-packages/sklearn/utils/extmath.py:227: RuntimeWarning: overflow encountered in matmul
+  ret = a @ b
+/Users/maitry/Metric_similar/metric/lib/python3.12/site-packages/sklearn/utils/extmath.py:227: RuntimeWarning: invalid value encountered in matmul
+  ret = a @ b
 ```
 </div>
 
