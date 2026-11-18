@@ -109,7 +109,7 @@ class MyLayer(layers.Layer):
 
 **Use `model.fit()` whenever possible.** If you cannot use the built-in `fit()`
 (e.g. in the case of a GAN, VAE, similarity model, etc.) then use
-a custom `train_step()` method to customize `fit()` ([see guide](https://keras.io/guides/customizing_what_happens_in_fit/)).
+a custom `train_step()` method to customize `fit()` ([see guide](https://keras.io/guides/custom_train_step_in_tensorflow/)).
 
 If you need to customize how the model iterates on the data (e.g. in the case of a RL algorithm or a curriculum learning algorithm),
 then write a training loop from scratch using `tf.GradientTape`.
