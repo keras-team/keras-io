@@ -917,6 +917,60 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "diffusion_gemma/",
+            "title": "DiffusionGemma",
+            "toc": True,
+            "children": [
+                {
+                    "path": "diffusion_gemma_tokenizer",
+                    "title": "DiffusionGemmaTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.DiffusionGemmaTokenizer",
+                        "keras_hub.tokenizers.DiffusionGemmaTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "diffusion_gemma_image_converter",
+                    "title": "DiffusionGemmaImageConverter",
+                    "generate": [
+                        "keras_hub.layers.DiffusionGemmaImageConverter",
+                        "keras_hub.layers.DiffusionGemmaImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "diffusion_gemma_backbone",
+                    "title": "DiffusionGemmaBackbone model",
+                    "generate": [
+                        "keras_hub.models.DiffusionGemmaBackbone",
+                        "keras_hub.models.DiffusionGemmaBackbone.from_preset",
+                        "keras_hub.models.DiffusionGemmaBackbone.token_embedding",
+                        "keras_hub.models.DiffusionGemmaBackbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "diffusion_gemma_block_diffusion_lm",
+                    "title": "DiffusionGemmaBlockDiffusionLM model",
+                    "generate": [
+                        "keras_hub.models.DiffusionGemmaBlockDiffusionLM",
+                        "keras_hub.models.DiffusionGemmaBlockDiffusionLM.from_preset",
+                        "keras_hub.models.DiffusionGemmaBlockDiffusionLM.generate",
+                        "keras_hub.models.DiffusionGemmaBlockDiffusionLM.backbone",
+                        "keras_hub.models.DiffusionGemmaBlockDiffusionLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "diffusion_gemma_block_diffusion_lm_preprocessor",
+                    "title": "DiffusionGemmaBlockDiffusionLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.DiffusionGemmaBlockDiffusionLMPreprocessor",
+                        "keras_hub.models.DiffusionGemmaBlockDiffusionLMPreprocessor.from_preset",
+                        "keras_hub.models.DiffusionGemmaBlockDiffusionLMPreprocessor.tokenizer",
+                        "keras_hub.models.DiffusionGemmaBlockDiffusionLMPreprocessor.image_converter",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "dinov2/",
             "title": "DINOV2",
             "toc": True,
@@ -1086,6 +1140,77 @@ MODELS_MASTER = {
                         "keras_hub.models.ElectraBackbone",
                         "keras_hub.models.ElectraBackbone.from_preset",
                         "keras_hub.models.ElectraBackbone.token_embedding",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "embedding_gemma2/",
+            "title": "EmbeddingGemma2",
+            "toc": True,
+            "children": [
+                {
+                    "path": "embedding_gemma2_tokenizer",
+                    "title": "EmbeddingGemma2Tokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.EmbeddingGemma2Tokenizer",
+                        "keras_hub.tokenizers.EmbeddingGemma2Tokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "embedding_gemma2_audio_converter",
+                    "title": "EmbeddingGemma2AudioConverter",
+                    "generate": [
+                        "keras_hub.layers.EmbeddingGemma2AudioConverter",
+                        "keras_hub.layers.EmbeddingGemma2AudioConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "embedding_gemma2_image_converter",
+                    "title": "EmbeddingGemma2ImageConverter",
+                    "generate": [
+                        "keras_hub.layers.EmbeddingGemma2ImageConverter",
+                        "keras_hub.layers.EmbeddingGemma2ImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "embedding_gemma2_video_converter",
+                    "title": "EmbeddingGemma2VideoConverter",
+                    "generate": [
+                        "keras_hub.layers.EmbeddingGemma2VideoConverter",
+                        "keras_hub.layers.EmbeddingGemma2VideoConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "embedding_gemma2_backbone",
+                    "title": "EmbeddingGemma2Backbone model",
+                    "generate": [
+                        "keras_hub.models.EmbeddingGemma2Backbone",
+                        "keras_hub.models.EmbeddingGemma2Backbone.from_preset",
+                        "keras_hub.models.EmbeddingGemma2Backbone.token_embedding",
+                        "keras_hub.models.EmbeddingGemma2Backbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "embedding_gemma2_text_embedder",
+                    "title": "EmbeddingGemma2TextEmbedder model",
+                    "generate": [
+                        "keras_hub.models.EmbeddingGemma2TextEmbedder",
+                        "keras_hub.models.EmbeddingGemma2TextEmbedder.from_preset",
+                        "keras_hub.models.EmbeddingGemma2TextEmbedder.backbone",
+                        "keras_hub.models.EmbeddingGemma2TextEmbedder.preprocessor",
+                    ],
+                },
+                {
+                    "path": "embedding_gemma2_text_embedder_preprocessor",
+                    "title": "EmbeddingGemma2TextEmbedderPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.EmbeddingGemma2TextEmbedderPreprocessor",
+                        "keras_hub.models.EmbeddingGemma2TextEmbedderPreprocessor.from_preset",
+                        "keras_hub.models.EmbeddingGemma2TextEmbedderPreprocessor.tokenizer",
+                        "keras_hub.models.EmbeddingGemma2TextEmbedderPreprocessor.image_converter",
+                        "keras_hub.models.EmbeddingGemma2TextEmbedderPreprocessor.audio_converter",
+                        "keras_hub.models.EmbeddingGemma2TextEmbedderPreprocessor.video_converter",
                     ],
                 },
             ],
@@ -1915,6 +2040,67 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "mistral3/",
+            "title": "Mistral3",
+            "toc": True,
+            "children": [
+                {
+                    "path": "mistral3_tokenizer",
+                    "title": "Mistral3Tokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.Mistral3Tokenizer",
+                        "keras_hub.tokenizers.Mistral3Tokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "mistral3_image_converter",
+                    "title": "Mistral3ImageConverter",
+                    "generate": [
+                        "keras_hub.layers.Mistral3ImageConverter",
+                        "keras_hub.layers.Mistral3ImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "mistral3_backbone",
+                    "title": "Mistral3Backbone model",
+                    "generate": [
+                        "keras_hub.models.Mistral3Backbone",
+                        "keras_hub.models.Mistral3Backbone.from_preset",
+                        "keras_hub.models.Mistral3Backbone.token_embedding",
+                        "keras_hub.models.Mistral3Backbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "mistral3_causal_lm",
+                    "title": "Mistral3CausalLM model",
+                    "generate": [
+                        "keras_hub.models.Mistral3CausalLM",
+                        "keras_hub.models.Mistral3CausalLM.from_preset",
+                        "keras_hub.models.Mistral3CausalLM.generate",
+                        "keras_hub.models.Mistral3CausalLM.backbone",
+                        "keras_hub.models.Mistral3CausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "mistral3_causal_lm_preprocessor",
+                    "title": "Mistral3CausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.Mistral3CausalLMPreprocessor",
+                        "keras_hub.models.Mistral3CausalLMPreprocessor.from_preset",
+                        "keras_hub.models.Mistral3CausalLMPreprocessor.tokenizer",
+                        "keras_hub.models.Mistral3CausalLMPreprocessor.image_converter",
+                    ],
+                },
+                {
+                    "path": "mistral3_vision_encoder",
+                    "title": "Mistral3VisionEncoder model",
+                    "generate": [
+                        "keras_hub.models.Mistral3VisionEncoder",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "mit/",
             "title": "MiT",
             "toc": True,
@@ -2084,6 +2270,87 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "modern_bert/",
+            "title": "ModernBERT",
+            "toc": True,
+            "children": [
+                {
+                    "path": "modern_bert_tokenizer",
+                    "title": "ModernBertTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.ModernBertTokenizer",
+                        "keras_hub.tokenizers.ModernBertTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "modern_bert_backbone",
+                    "title": "ModernBertBackbone model",
+                    "generate": [
+                        "keras_hub.models.ModernBertBackbone",
+                        "keras_hub.models.ModernBertBackbone.from_preset",
+                        "keras_hub.models.ModernBertBackbone.token_embedding",
+                    ],
+                },
+                {
+                    "path": "modern_bert_text_classifier",
+                    "title": "ModernBertTextClassifier model",
+                    "generate": [
+                        "keras_hub.models.ModernBertTextClassifier",
+                        "keras_hub.models.ModernBertTextClassifier.from_preset",
+                        "keras_hub.models.ModernBertTextClassifier.backbone",
+                        "keras_hub.models.ModernBertTextClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "modern_bert_text_classifier_preprocessor",
+                    "title": "ModernBertTextClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.ModernBertTextClassifierPreprocessor",
+                        "keras_hub.models.ModernBertTextClassifierPreprocessor.from_preset",
+                        "keras_hub.models.ModernBertTextClassifierPreprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "modern_bert_masked_lm",
+                    "title": "ModernBertMaskedLM model",
+                    "generate": [
+                        "keras_hub.models.ModernBertMaskedLM",
+                        "keras_hub.models.ModernBertMaskedLM.from_preset",
+                        "keras_hub.models.ModernBertMaskedLM.backbone",
+                        "keras_hub.models.ModernBertMaskedLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "modern_bert_masked_lm_preprocessor",
+                    "title": "ModernBertMaskedLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.ModernBertMaskedLMPreprocessor",
+                        "keras_hub.models.ModernBertMaskedLMPreprocessor.from_preset",
+                        "keras_hub.models.ModernBertMaskedLMPreprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "modern_bert_text_embedder",
+                    "title": "ModernBertTextEmbedder model",
+                    "generate": [
+                        "keras_hub.models.ModernBertTextEmbedder",
+                        "keras_hub.models.ModernBertTextEmbedder.from_preset",
+                        "keras_hub.models.ModernBertTextEmbedder.backbone",
+                        "keras_hub.models.ModernBertTextEmbedder.preprocessor",
+                    ],
+                },
+                {
+                    "path": "modern_bert_text_embedder_preprocessor",
+                    "title": "ModernBertTextEmbedderPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.ModernBertTextEmbedderPreprocessor",
+                        "keras_hub.models.ModernBertTextEmbedderPreprocessor.from_preset",
+                        "keras_hub.models.ModernBertTextEmbedderPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "moonshine/",
             "title": "Moonshine",
             "toc": True,
@@ -2131,6 +2398,128 @@ MODELS_MASTER = {
                         "keras_hub.models.MoonshineAudioToTextPreprocessor",
                         "keras_hub.models.MoonshineAudioToTextPreprocessor.from_preset",
                         "keras_hub.models.MoonshineAudioToTextPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "mpnet/",
+            "title": "MPNet",
+            "toc": True,
+            "children": [
+                {
+                    "path": "mpnet_tokenizer",
+                    "title": "MPNetTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.MPNetTokenizer",
+                        "keras_hub.tokenizers.MPNetTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "mpnet_backbone",
+                    "title": "MPNetBackbone model",
+                    "generate": [
+                        "keras_hub.models.MPNetBackbone",
+                        "keras_hub.models.MPNetBackbone.from_preset",
+                        "keras_hub.models.MPNetBackbone.token_embedding",
+                    ],
+                },
+                {
+                    "path": "mpnet_text_embedder",
+                    "title": "MPNetTextEmbedder model",
+                    "generate": [
+                        "keras_hub.models.MPNetTextEmbedder",
+                        "keras_hub.models.MPNetTextEmbedder.from_preset",
+                        "keras_hub.models.MPNetTextEmbedder.backbone",
+                        "keras_hub.models.MPNetTextEmbedder.preprocessor",
+                    ],
+                },
+                {
+                    "path": "mpnet_text_embedder_preprocessor",
+                    "title": "MPNetTextEmbedderPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.MPNetTextEmbedderPreprocessor",
+                        "keras_hub.models.MPNetTextEmbedderPreprocessor.from_preset",
+                        "keras_hub.models.MPNetTextEmbedderPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "muse_glimmer/",
+            "title": "MuseGlimmer",
+            "toc": True,
+            "children": [
+                {
+                    "path": "muse_glimmer_tokenizer",
+                    "title": "MuseGlimmerTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.MuseGlimmerTokenizer",
+                        "keras_hub.tokenizers.MuseGlimmerTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "muse_glimmer_image_converter",
+                    "title": "MuseGlimmerImageConverter",
+                    "generate": [
+                        "keras_hub.layers.MuseGlimmerImageConverter",
+                        "keras_hub.layers.MuseGlimmerImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "muse_glimmer_video_converter",
+                    "title": "MuseGlimmerVideoConverter",
+                    "generate": [
+                        "keras_hub.layers.MuseGlimmerVideoConverter",
+                        "keras_hub.layers.MuseGlimmerVideoConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "muse_glimmer_backbone",
+                    "title": "MuseGlimmerBackbone model",
+                    "generate": [
+                        "keras_hub.models.MuseGlimmerBackbone",
+                        "keras_hub.models.MuseGlimmerBackbone.from_preset",
+                        "keras_hub.models.MuseGlimmerBackbone.token_embedding",
+                        "keras_hub.models.MuseGlimmerBackbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "muse_glimmer_causal_lm",
+                    "title": "MuseGlimmerCausalLM model",
+                    "generate": [
+                        "keras_hub.models.MuseGlimmerCausalLM",
+                        "keras_hub.models.MuseGlimmerCausalLM.from_preset",
+                        "keras_hub.models.MuseGlimmerCausalLM.generate",
+                        "keras_hub.models.MuseGlimmerCausalLM.backbone",
+                        "keras_hub.models.MuseGlimmerCausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "muse_glimmer_assistant_causal_lm",
+                    "title": "MuseGlimmerAssistantCausalLM model",
+                    "generate": [
+                        "keras_hub.models.MuseGlimmerAssistantCausalLM",
+                        "keras_hub.models.MuseGlimmerAssistantCausalLM.from_preset",
+                        "keras_hub.models.MuseGlimmerAssistantCausalLM.backbone",
+                    ],
+                },
+                {
+                    "path": "muse_glimmer_causal_lm_preprocessor",
+                    "title": "MuseGlimmerCausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.MuseGlimmerCausalLMPreprocessor",
+                        "keras_hub.models.MuseGlimmerCausalLMPreprocessor.from_preset",
+                        "keras_hub.models.MuseGlimmerCausalLMPreprocessor.tokenizer",
+                        "keras_hub.models.MuseGlimmerCausalLMPreprocessor.image_converter",
+                        "keras_hub.models.MuseGlimmerCausalLMPreprocessor.video_converter",
+                    ],
+                },
+                {
+                    "path": "muse_glimmer_vision_encoder",
+                    "title": "MuseGlimmerVisionEncoder model",
+                    "generate": [
+                        "keras_hub.models.MuseGlimmerVisionEncoder",
                     ],
                 },
             ],
@@ -3012,6 +3401,77 @@ MODELS_MASTER = {
                         "keras_hub.models.SmolLM3CausalLMPreprocessor",
                         "keras_hub.models.SmolLM3CausalLMPreprocessor.from_preset",
                         "keras_hub.models.SmolLM3CausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "smolvlm2/",
+            "title": "SmolVLM2",
+            "toc": True,
+            "children": [
+                {
+                    "path": "smolvlm2_tokenizer",
+                    "title": "SmolVLM2Tokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.SmolVLM2Tokenizer",
+                        "keras_hub.tokenizers.SmolVLM2Tokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "smolvlm2_image_converter",
+                    "title": "SmolVLM2ImageConverter",
+                    "generate": [
+                        "keras_hub.layers.SmolVLM2ImageConverter",
+                        "keras_hub.layers.SmolVLM2ImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "smolvlm2_video_converter",
+                    "title": "SmolVLM2VideoConverter",
+                    "generate": [
+                        "keras_hub.layers.SmolVLM2VideoConverter",
+                        "keras_hub.layers.SmolVLM2VideoConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "smolvlm2_backbone",
+                    "title": "SmolVLM2Backbone model",
+                    "generate": [
+                        "keras_hub.models.SmolVLM2Backbone",
+                        "keras_hub.models.SmolVLM2Backbone.from_preset",
+                        "keras_hub.models.SmolVLM2Backbone.token_embedding",
+                        "keras_hub.models.SmolVLM2Backbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "smolvlm2_causal_lm",
+                    "title": "SmolVLM2CausalLM model",
+                    "generate": [
+                        "keras_hub.models.SmolVLM2CausalLM",
+                        "keras_hub.models.SmolVLM2CausalLM.from_preset",
+                        "keras_hub.models.SmolVLM2CausalLM.generate",
+                        "keras_hub.models.SmolVLM2CausalLM.backbone",
+                        "keras_hub.models.SmolVLM2CausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "smolvlm2_vision_encoder",
+                    "title": "SmolVLM2VisionEncoder model",
+                    "generate": [
+                        "keras_hub.models.SmolVLM2VisionEncoder",
+                        "keras_hub.models.SmolVLM2VisionEncoder.from_preset",
+                    ],
+                },
+                {
+                    "path": "smolvlm2_causal_lm_preprocessor",
+                    "title": "SmolVLM2CausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.SmolVLM2CausalLMPreprocessor",
+                        "keras_hub.models.SmolVLM2CausalLMPreprocessor.from_preset",
+                        "keras_hub.models.SmolVLM2CausalLMPreprocessor.tokenizer",
+                        "keras_hub.models.SmolVLM2CausalLMPreprocessor.image_converter",
+                        "keras_hub.models.SmolVLM2CausalLMPreprocessor.video_converter",
                     ],
                 },
             ],
