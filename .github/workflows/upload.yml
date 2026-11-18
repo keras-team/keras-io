@@ -4,6 +4,13 @@ on:
   push:
     branches: [master]
 
+# Deploys must never overlap: each run uploads its build and then deletes any
+# page not in that build, so two runs from different commits can delete each
+# other's new pages.
+concurrency:
+  group: upload-s3
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
