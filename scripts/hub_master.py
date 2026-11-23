@@ -2894,6 +2894,60 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "qwen3_asr/",
+            "title": "Qwen3ASR",
+            "toc": True,
+            "children": [
+                {
+                    "path": "qwen3_asr_tokenizer",
+                    "title": "Qwen3ASRTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.Qwen3ASRTokenizer",
+                        "keras_hub.tokenizers.Qwen3ASRTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "qwen3_asr_audio_converter",
+                    "title": "Qwen3ASRAudioConverter",
+                    "generate": [
+                        "keras_hub.layers.Qwen3ASRAudioConverter",
+                        "keras_hub.layers.Qwen3ASRAudioConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "qwen3_asr_backbone",
+                    "title": "Qwen3ASRBackbone model",
+                    "generate": [
+                        "keras_hub.models.Qwen3ASRBackbone",
+                        "keras_hub.models.Qwen3ASRBackbone.from_preset",
+                        "keras_hub.models.Qwen3ASRBackbone.token_embedding",
+                        "keras_hub.models.Qwen3ASRBackbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "qwen3_asr_causal_lm",
+                    "title": "Qwen3ASRCausalLM model",
+                    "generate": [
+                        "keras_hub.models.Qwen3ASRCausalLM",
+                        "keras_hub.models.Qwen3ASRCausalLM.from_preset",
+                        "keras_hub.models.Qwen3ASRCausalLM.generate",
+                        "keras_hub.models.Qwen3ASRCausalLM.backbone",
+                        "keras_hub.models.Qwen3ASRCausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "qwen3_asr_causal_lm_preprocessor",
+                    "title": "Qwen3ASRCausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.Qwen3ASRCausalLMPreprocessor",
+                        "keras_hub.models.Qwen3ASRCausalLMPreprocessor.from_preset",
+                        "keras_hub.models.Qwen3ASRCausalLMPreprocessor.tokenizer",
+                        "keras_hub.models.Qwen3ASRCausalLMPreprocessor.audio_converter",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "qwen3_moe/",
             "title": "Qwen3Moe",
             "toc": True,
