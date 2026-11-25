@@ -778,9 +778,9 @@ example.
 The most significant advantage of KerasHub is it gives you the flexibility to combine pre-trained
 building blocks with the full power of Keras 3. You can train large LLMs on TPUs with model
 parallelism with the [keras.distribution](https://keras.io/guides/distribution/) API. You can
-quantize models with Keras' [quatize
-method](https://keras.io/examples/keras_recipes/float8_training_and_inference_with_transfo
-rmer/). You can write custom training loops and even mix in direct Jax, Torch, or
+quantize models with Keras' [quantize
+method](https://keras.io/examples/keras_recipes/float8_training_and_inference_with_transformer/).
+You can write custom training loops and even mix in direct Jax, Torch, or
 Tensorflow calls.
 
 See [keras.io/keras_hub](https://keras.io/keras_hub/) for a full list of guides and
