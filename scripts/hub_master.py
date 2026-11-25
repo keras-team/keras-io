@@ -2525,6 +2525,49 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "openai_privacy_filter/",
+            "title": "OpenAIPrivacyFilter",
+            "toc": True,
+            "children": [
+                {
+                    "path": "openai_privacy_filter_tokenizer",
+                    "title": "OpenAIPrivacyFilterTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.OpenAIPrivacyFilterTokenizer",
+                        "keras_hub.tokenizers.OpenAIPrivacyFilterTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "openai_privacy_filter_backbone",
+                    "title": "OpenAIPrivacyFilterBackbone model",
+                    "generate": [
+                        "keras_hub.models.OpenAIPrivacyFilterBackbone",
+                        "keras_hub.models.OpenAIPrivacyFilterBackbone.from_preset",
+                        "keras_hub.models.OpenAIPrivacyFilterBackbone.token_embedding",
+                    ],
+                },
+                {
+                    "path": "openai_privacy_filter_token_classifier",
+                    "title": "OpenAIPrivacyFilterTokenClassifier model",
+                    "generate": [
+                        "keras_hub.models.OpenAIPrivacyFilterTokenClassifier",
+                        "keras_hub.models.OpenAIPrivacyFilterTokenClassifier.from_preset",
+                        "keras_hub.models.OpenAIPrivacyFilterTokenClassifier.backbone",
+                        "keras_hub.models.OpenAIPrivacyFilterTokenClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "openai_privacy_filter_token_classifier_preprocessor",
+                    "title": "OpenAIPrivacyFilterTokenClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.OpenAIPrivacyFilterTokenClassifierPreprocessor",
+                        "keras_hub.models.OpenAIPrivacyFilterTokenClassifierPreprocessor.from_preset",
+                        "keras_hub.models.OpenAIPrivacyFilterTokenClassifierPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "opt/",
             "title": "OPT",
             "toc": True,
